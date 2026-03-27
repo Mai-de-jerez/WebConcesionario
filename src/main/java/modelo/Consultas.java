@@ -36,6 +36,13 @@ public class Consultas implements Serializable {
         this.email = email;
         this.mensaje = mensaje;
     }
+    
+    @PrePersist
+    public void prePersist() {
+        if (this.fecha == null) {
+            this.fecha = LocalDateTime.now();
+        }
+    }
 
     // Getters y Setters
     public int getId() { return id; }

@@ -13,22 +13,15 @@ public class Pedido implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pedido")
     private int id;
+ 
 
-    @Column(name = "id_usuario")
-    private int idUsuario;
-
-    @Column(name = "id_coche")
-    private int idCoche;    
-
-    @Column(name = "fecha_reserva", insertable = false, updatable = false, 
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private Timestamp fechaReserva;           
+    @ManyToOne
+    @JoinColumn(name = "id_reserva", nullable = false)
+    private Reserva reserva;
 
     @Column(name = "fecha_pago")
     private Timestamp fechaPago;
 
-    @Column(name = "fecha_limite_pago")
-    private Timestamp fechaLimitePago; 
 
     @Column(name = "importe_abonado")
     private double importeAbonado;
@@ -38,9 +31,7 @@ public class Pedido implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_pedido")
-    private EstadoPedido estado;
-
-    private String imagen; 
+    private EstadoPedido estado; 
     
     @Column(columnDefinition = "TEXT")
     private String observaciones;
@@ -51,15 +42,22 @@ public class Pedido implements Serializable {
     }
 
     // Constructor para nuevos pedidos (sin ID ni fechas automáticas)
-    public Pedido(int idUsuario, int idCoche, double importeAbonado, EstadoPedido estado, String imagen) {
-        this.idUsuario = idUsuario;
-        this.idCoche = idCoche;
+    public Pedido(Reserva reserva, double importeAbonado, EstadoPedido estado) {
+        this.reserva = reserva;
         this.importeAbonado = importeAbonado;
         this.estado = estado;
-        this.imagen = imagen;
+
+    }
+    
+    // Inicializar fechaPago automáticamente antes de persistir
+    @PrePersist
+    public void prePersist() {
+        if (this.fechaPago == null) {
+            this.fechaPago = new Timestamp(System.currentTimeMillis());
+        }
     }
 
- // Getters y Setters
+    // Getters y Setters
 	/**
 	 * @return el id
 	 */
@@ -75,46 +73,19 @@ public class Pedido implements Serializable {
 	}
 
 	/**
-	 * @return el idUsuario
+	 * @return el idReserva
 	 */
-	public int getIdUsuario() {
-		return idUsuario;
-	}
+	public Reserva getReserva() {
+        return reserva;
+    }
 
-	/**
-	 * @param idUsuario el idUsuario a establecer
+	/** 
+	 * @param reserva
 	 */
-	public void setIdUsuario(int idUsuario) {
-		this.idUsuario = idUsuario;
-	}
-
-	/**
-	 * @return el idCoche
-	 */
-	public int getIdCoche() {
-		return idCoche;
-	}
-
-	/**
-	 * @param idCoche el idCoche a establecer
-	 */
-	public void setIdCoche(int idCoche) {
-		this.idCoche = idCoche;
-	}
-
-	/**
-	 * @return el fechaReserva
-	 */
-	public Timestamp getFechaReserva() {
-		return fechaReserva;
-	}
-
-	/**
-	 * @param fechaReserva el fechaReserva a establecer
-	 */
-	public void setFechaReserva(Timestamp fechaReserva) {
-		this.fechaReserva = fechaReserva;
-	}
+    public void setReserva(Reserva reserva) {
+        this.reserva = reserva;
+    }
+ 
 
 	/**
 	 * @return el fechaPago
@@ -130,19 +101,7 @@ public class Pedido implements Serializable {
 		this.fechaPago = fechaPago;
 	}
 
-	/**
-	 * @return el fechaLimitePago
-	 */
-	public Timestamp getFechaLimitePago() {
-		return fechaLimitePago;
-	}
 
-	/**
-	 * @param fechaLimitePago el fechaLimitePago a establecer
-	 */
-	public void setFechaLimitePago(Timestamp fechaLimitePago) {
-		this.fechaLimitePago = fechaLimitePago;
-	}
 
 	/**
 	 * @return el importeAbonado
@@ -186,19 +145,6 @@ public class Pedido implements Serializable {
 		this.estado = estado;
 	}
 
-	/**
-	 * @return el imagen
-	 */
-	public String getImagen() {
-		return imagen;
-	}
-
-	/**
-	 * @param imagen el imagen a establecer
-	 */
-	public void setImagen(String imagen) {
-		this.imagen = imagen;
-	}
 
 	/**
 	 * @return el observaciones
@@ -220,13 +166,23 @@ public class Pedido implements Serializable {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
+	
+	/**
+	 * Calcula el importe restante a pagar para completar el pedido, basado en el precio total del coche reservado y el importe ya abonado.
+	 * @return el importe restante a pagar
+	 */
+	public double getImporteRestante() {
+	    if (this.reserva != null && this.reserva.getCoche() != null) {
+	        double precioTotal = this.reserva.getCoche().getPrecio();
+	        return precioTotal - this.importeAbonado;
+	    }
+	    return 0.0;
+	}
 
 	@Override
 	public String toString() {
-		return "Pedido [id=" + id + ", idUsuario=" + idUsuario + ", idCoche=" + idCoche + ", fechaReserva="
-				+ fechaReserva + ", fechaPago=" + fechaPago + ", fechaLimitePago=" + fechaLimitePago
-				+ ", importeAbonado=" + importeAbonado + ", transaccionId=" + transaccionId + ", estado=" + estado
-				+ ", imagen=" + imagen + ", observaciones=" + observaciones + "]";
+		return "Pedido [id=" + id + ", reserva=" + reserva + ", fechaPago=" + fechaPago + ", importeAbonado=" + importeAbonado + ", transaccionId=" + transaccionId + ", estado=" + estado
+				+ ", observaciones=" + observaciones + "]";
 	}		
     
 }

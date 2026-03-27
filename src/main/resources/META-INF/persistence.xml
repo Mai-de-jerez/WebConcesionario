@@ -11,6 +11,7 @@
         <class>modelo.Usuario</class>
         <class>modelo.Pedido</class>
         <class>modelo.Consultas</class>
+        <class>modelo.Reserva</class>
         
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/web_concesionario"/>

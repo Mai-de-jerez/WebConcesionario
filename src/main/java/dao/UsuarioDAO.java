@@ -3,6 +3,7 @@ package dao;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import modelo.Usuario;
 import util.JPAUtil;
 import org.mindrot.jbcrypt.BCrypt;
@@ -14,14 +15,14 @@ public class UsuarioDAO {
 
     private UsuarioDAO() {}
 
-    public static UsuarioDAO getInstance() {
+    
+    public static synchronized UsuarioDAO getInstance() {
         if (instance == null) {
             instance = new UsuarioDAO();
         }
         return instance;
     }
 
-    // --- 🔐 VALIDAR (LOGIN) ---
     public Usuario validar(String userOrEmail, String passPlano) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -35,18 +36,60 @@ public class UsuarioDAO {
                 return u;
             }
         } catch (NoResultException e) {
-            return null; // Usuario no encontrado
+            return null;
         } finally {
             em.close();
         }
         return null;
     }
 
-    // --- 📝 LISTAR TODOS ---
-    public List<Usuario> listarTodos() {
+    public List<Usuario> listar(String busqueda, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
-            return em.createQuery("SELECT u FROM Usuario u", Usuario.class).getResultList();
+            String jpql = "SELECT u FROM Usuario u WHERE 1=1";
+
+            if (busqueda != null && !busqueda.isBlank()) {
+                jpql += " AND (LOWER(u.nombre) LIKE :b OR LOWER(u.apellidos) LIKE :b " +
+                        "OR LOWER(u.usuario) LIKE :b OR LOWER(u.email) LIKE :b " +
+                        "OR CAST(u.id_usuario AS string) LIKE :b)";
+            }
+
+            jpql += " ORDER BY u.id_usuario ASC";
+
+            TypedQuery<Usuario> query = em.createQuery(jpql, Usuario.class);
+
+            if (busqueda != null && !busqueda.isBlank()) {
+                query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+            }
+
+            query.setFirstResult((pagina - 1) * porPagina);
+            query.setMaxResults(porPagina);
+            return query.getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    
+    public long contarTodos(String busqueda) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            String jpql = "SELECT COUNT(u) FROM Usuario u WHERE 1=1";
+
+            if (busqueda != null && !busqueda.isBlank()) {
+                jpql += " AND (LOWER(u.nombre) LIKE :b OR LOWER(u.apellidos) LIKE :b " +
+                        "OR LOWER(u.usuario) LIKE :b OR LOWER(u.email) LIKE :b " +
+                        "OR CAST(u.id_usuario AS string) LIKE :b)";
+            }
+
+            TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+
+            if (busqueda != null && !busqueda.isBlank()) {
+                query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+            }
+
+            return query.getSingleResult();
         } finally {
             em.close();
         }

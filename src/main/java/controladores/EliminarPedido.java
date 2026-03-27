@@ -6,10 +6,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import modelo.Coche;
 import modelo.EstadoVehiculo;
 import modelo.Pedido;
 import modelo.Usuario;
 import java.io.IOException;
+
+import dao.CocheDAO;
+import dao.PedidosDAO;
 
 
 /**
@@ -47,15 +51,17 @@ public class EliminarPedido extends HttpServlet {
                 int idPedido = Integer.parseInt(idParam);
  
                 // 1. Buscamos el pedido usando el DAO especializado (PedidosDAO con 's')
-                Pedido pedido = dao.PedidosDAO.getInstance().obtenerPorId(idPedido);
+                Pedido pedido = PedidosDAO.getInstance().obtenerPorId(idPedido);
                 
                 if (pedido != null) {
-                   
-                    // 2. Liberamos el coche usando su ID y el CocheDAO
-                    dao.CocheDAO.getInstance().actualizarEstadoCoche(pedido.getIdCoche(), EstadoVehiculo.DISPONIBLE);
+                          
+                    Coche coche = pedido.getReserva().getCoche();
+                    if (coche != null) {
+                        CocheDAO.getInstance().actualizarEstadoCoche(coche.getId(), EstadoVehiculo.DISPONIBLE);
+                    }
               
                     // 3. Eliminamos el pedido físicamente de la BD a través del DAO
-                    dao.PedidosDAO.getInstance().eliminarPedido(idPedido); 
+                    PedidosDAO.getInstance().eliminarPedido(idPedido); 
               
                     response.sendRedirect("ListarPedidos?msg=Pedido eliminado y coche liberado");
                 } else {

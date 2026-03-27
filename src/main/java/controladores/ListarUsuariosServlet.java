@@ -32,27 +32,33 @@ public class ListarUsuariosServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         HttpSession session = request.getSession();
         Usuario usu = (Usuario) session.getAttribute("usuarioLogueado");
-
         if (usu == null || usu.getRol().getNivel() > 2) {
             response.sendRedirect("login.jsp?error=Acceso denegado");
             return;
         }
-              
+
         try {
-      
-            List<Usuario> lista = UsuarioDAO.getInstance().listarTodos(); 
+            String busqueda = request.getParameter("busqueda");
+            String paginaParam = request.getParameter("pagina");
+            int pagina = (paginaParam != null) ? Integer.parseInt(paginaParam) : 1;
+            int porPagina = 9;
+
+            List<Usuario> lista = UsuarioDAO.getInstance().listar(busqueda, pagina, porPagina);
+            long total = UsuarioDAO.getInstance().contarTodos(busqueda);
+            int totalPaginas = (int) Math.ceil((double) total / porPagina);
 
             request.setAttribute("listaUsuarios", lista);
+            request.setAttribute("busqueda", busqueda);
+            request.setAttribute("paginaActual", pagina);
+            request.setAttribute("totalPaginas", totalPaginas);
+
             request.getRequestDispatcher("listar-usuarios.jsp").forward(request, response);
 
         } catch (Exception e) {
-
             e.printStackTrace();
             request.setAttribute("error", "Error al cargar usuarios: " + e.getMessage());
-
             request.getRequestDispatcher("admin-panel.jsp").forward(request, response);
         }
     }

@@ -50,8 +50,9 @@ public class DetallePedido extends HttpServlet {
 
 	            if (pedido != null) {
 	
-	            	Usuario cliente = UsuarioDAO.getInstance().obtenerPorId(pedido.getIdUsuario());    
-	                Coche coche = CocheDAO.getInstance().obtenerPorId(pedido.getIdCoche());
+	            	Usuario cliente = UsuarioDAO.getInstance().obtenerPorId(pedido.getReserva().getUsuario().getId_usuario());
+	                Coche coche = CocheDAO.getInstance().obtenerPorId(pedido.getReserva().getCoche().getId());
+	                
 	          
 	                request.setAttribute("pedido", pedido);
 	                request.setAttribute("cliente", cliente); 

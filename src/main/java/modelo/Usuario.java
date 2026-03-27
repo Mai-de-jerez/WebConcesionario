@@ -2,6 +2,8 @@ package modelo;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "usuarios")
@@ -29,6 +31,16 @@ public class Usuario implements Serializable {
     private String telefono;
     private String direccion;
     private String foto;
+    
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "token_expiracion")
+    private LocalDateTime tokenExpiracion;
+    
+    // Relación con reservas
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reserva> reservas; 
 
     // Constructor vacío (Obligatorio para JPA)
     public Usuario() {}
@@ -211,6 +223,9 @@ public class Usuario implements Serializable {
 	public void setFoto(String foto) {
 		this.foto = foto;
 	}
+	
+	public List<Reserva> getReservas() { return reservas; }
+    public void setReservas(List<Reserva> reservas) { this.reservas = reservas; }
 
 	/**
 	 * @return el serialversionuid

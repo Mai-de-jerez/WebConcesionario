@@ -65,11 +65,11 @@
 		        <div class="form-group">
 				    <label for="tipoMotor">Tipo de Motor: *</label>
 				    <select id="tipoMotor" name="tipoMotor" required>
-				        <option value="Gasolina">Gasolina</option>
-				        <option value="Diesel">Diésel</option>
-				        <option value="Eléctrico">Eléctrico</option>
-				        <option value="Híbrido">Híbrido</option>
-				    </select>
+					  <option value="GASOLINA">Gasolina</option>
+					  <option value="DIESEL">Diesel</option>
+					  <option value="ELECTRICO">Electrico</option>
+					  <option value="HIBRIDO">Hibrido</option>
+					</select>
 				</div>
 		
 		        <div class="form-group">

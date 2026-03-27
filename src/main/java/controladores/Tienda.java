@@ -20,29 +20,33 @@ public class Tienda extends HttpServlet {
     public Tienda() {
         super();
     }
-
+    
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        
         try {
-            // CORRECCIÓN: Llamamos al Singleton del DAO y a su método listar()
-            List<Coche> lista = CocheDAO.getInstance().listar(); 
-       
-            // Pasamos los datos a la vista
+            String busqueda = request.getParameter("busqueda");
+            String paginaParam = request.getParameter("pagina");
+            int pagina = (paginaParam != null) ? Integer.parseInt(paginaParam) : 1;
+            int porPagina = 9;
+
+            List<Coche> lista = CocheDAO.getInstance().listarTienda(busqueda, pagina, porPagina);
+            long total = CocheDAO.getInstance().contarTienda(busqueda);
+            int totalPaginas = (int) Math.ceil((double) total / porPagina);
+
             request.setAttribute("listaCoches", lista);
-  
-            // Forward al JSP de la tienda
+            request.setAttribute("busqueda", busqueda);
+            request.setAttribute("paginaActual", pagina);
+            request.setAttribute("totalPaginas", totalPaginas);
+
             request.getRequestDispatcher("tienda.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Mensaje amigable de error
             request.setAttribute("error", "No se han podido cargar los vehículos. Inténtalo de nuevo más tarde.");
             request.getRequestDispatcher("index.jsp").forward(request, response);
         }
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Redirigimos al GET para que la lógica de carga sea la misma
         doGet(request, response);
     }
 }

@@ -3,12 +3,15 @@ package modelo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;// Importante: usamos jakarta
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Table(name = "coche") 
@@ -31,19 +34,24 @@ public class Coche implements Serializable {
     private String anio;
 
     @Column(name = "tipo_motor")
-    @Enumerated(EnumType.STRING) // Guarda el nombre del motor (DIESEL, etc) en vez de un número
+    @Enumerated(EnumType.STRING) 
     private TipoMotor tipoMotor;
 
     private int numPuertas;
 
-    @Enumerated(EnumType.STRING) // Guarda el estado (DISPONIBLE, etc) como texto
+    @Enumerated(EnumType.STRING) 
     private EstadoVehiculo estado;
 
     private String imagen;
 
-    @Column(columnDefinition = "TEXT") // Para que en la BD quepa mucho texto
+    @Column(columnDefinition = "TEXT") 
     private String descripcion;
 
+
+    // Relación con reservas
+    @OneToMany(mappedBy = "coche", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reserva> reservas;
+    
     // CONSTRUCTOR VACÍO: Obligatorio para JPA
     public Coche() {
         super();
@@ -270,6 +278,9 @@ public class Coche implements Serializable {
 	public void setDescripcion(String descripcion) {
 		this.descripcion = descripcion;
 	}
+	
+	public List<Reserva> getReservas() { return reservas; }
+    public void setReservas(List<Reserva> reservas) { this.reservas = reservas; } 
 	
 	// Métodos personales
 	

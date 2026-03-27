@@ -56,14 +56,14 @@ public class FinalizarCompra extends HttpServlet {
 	            if (coche != null) {
 	  
 	                Pedido pedido = new Pedido();
-	                pedido.setIdUsuario(user.getId_usuario());
-	                pedido.setIdCoche(idCoche);
+	                pedido.getReserva().getUsuario().setId_usuario(user.getId_usuario());
+	                pedido.getReserva().getCoche().setId(idCoche);
 	                pedido.setImporteAbonado(importeReserva);
-	                pedido.setFechaReserva(new Timestamp(System.currentTimeMillis()));
+	                pedido.setFechaPago(new Timestamp(System.currentTimeMillis()));
 	                
 	                pedido.setTransaccionId(UUID.randomUUID().toString());
 	                pedido.setEstado(EstadoPedido.PENDIENTE);
-	                pedido.setImagen(coche.getImagen());
+	
 	         
 	                String notasPago = "Titular: " + user.getNombre() + " " + user.getApellidos();
 	                pedido.setObservaciones(notasPago);

@@ -3,7 +3,6 @@ package dao;
 import jakarta.persistence.EntityManager;
 import modelo.Consultas;
 import util.JPAUtil;
-import java.util.List;
 
 public class ConsultasDAO {
 
@@ -20,13 +19,14 @@ public class ConsultasDAO {
     }
 
     /**
-     * Guarda la consulta usando JPA
+     * Inserta una nueva consulta en la base de datos.
+     * @param c La consulta a insertar
      */
     public void insertar(Consultas c) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(c); // JPA se encarga de generar el INSERT
+            em.persist(c); 
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -36,16 +36,4 @@ public class ConsultasDAO {
         }
     }
 
-    /**
-     * Por si necesitas ver los mensajes desde un panel de admin
-     */
-    public List<Consultas> listar() {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        try {
-            return em.createQuery("SELECT c FROM Consultas c ORDER BY c.id DESC", Consultas.class)
-                     .getResultList();
-        } finally {
-            em.close();
-        }
-    }
 }
