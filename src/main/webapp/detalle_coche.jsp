@@ -106,7 +106,7 @@
 						    <% if (modoAdmin) { %>
 						        <%-- MODO ADMINISTRACIÓN: El Superuser está gestionando --%>
 						        <a href="EditarVehiculo?id=<%= c.getId() %>" class="btn btn-primary">✏️ Editar Vehículo</a>
-						        <a href="ListarVehiculos" class="btn btn-back">Volver al Panel</a>
+						        <a href="coche_admin.html" class="btn btn-back">Volver al Panel</a>
 						    
 						    <% } else { %>
 						        <%-- MODO TIENDA: El usuario (o el admin de paseo) está comprando --%>

@@ -50,7 +50,7 @@ public class Coche implements Serializable {
 
     // Relación con reservas
     @OneToMany(mappedBy = "coche", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Reserva> reservas;
+    private transient List<Reserva> reservas;
     
     // CONSTRUCTOR VACÍO: Obligatorio para JPA
     public Coche() {

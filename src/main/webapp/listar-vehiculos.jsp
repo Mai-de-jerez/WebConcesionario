@@ -83,6 +83,14 @@
                         <a href="EliminarVehiculo?id=<%= v.getId() %>" class="row-btn btn-secondary btn-small"
                            onclick="return confirm('¿Estás seguro de querer eliminar este vehículo?')">Eliminar</a>
                     </td>
+                    
+                    
+                  
+	                
+	                <button class="row-btn btn-primary btn-small" onclick="editar(${c.id})">Editar</button>
+	                
+	                <button class="row-btn btn-secondary btn-small" onclick="eliminar(${c.id})">Eliminar</button>
+	            </td>
                 </tr>
                 <% } } else { %>
                 <tr>

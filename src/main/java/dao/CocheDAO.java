@@ -21,14 +21,17 @@ public class CocheDAO {
     }
   
 
+    
     public List<Coche> listarAdmin(String busqueda, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             String jpql = "SELECT c FROM Coche c WHERE 1=1";
 
             if (busqueda != null && !busqueda.isBlank()) {
+ 
                 jpql += " AND (LOWER(c.marca) LIKE :b OR LOWER(c.modelo) LIKE :b " +
-                        "OR LOWER(c.matricula) LIKE :b OR LOWER(c.tipoMotor) LIKE :b)";
+                        "OR LOWER(c.matricula) LIKE :b OR LOWER(c.tipoMotor) LIKE :b " +
+                        "OR CAST(c.id AS string) LIKE :b)"; 
             }
 
             jpql += " ORDER BY c.id DESC";

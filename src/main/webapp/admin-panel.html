@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Concesionario May</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Panel de Administrador</h1>
+        
+        <div id="mensaje-bienvenida" class="alert-success" style="display:none"></div>
+        
+        <div class="welcome-section">
+            <p>Estás gestionando el sistema como: <strong id="rol-usuario">...</strong></p>
+        </div>
+
+        <div class="feature-cards">
+            <div class="feature-card" onclick="location.href='coche_admin.html'">
+                <h3>🚗 Gestión Vehículos</h3>
+                <p>Administra tus vehículos de manera eficiente</p>
+            </div>
+            <div class="feature-card" onclick="location.href='gestion-usuarios.html'">
+                <h3>👤 Gestión de usuarios</h3>
+                <p>Administra usuarios de tu sitio web de manera eficiente.</p>
+            </div>
+            <div class="feature-card" onclick="location.href='gestion-pedidos.html'">
+                <h3>📦 Gestión de Pedidos</h3>
+                <p>Administra pedidos de manera eficiente.</p>
+            </div>
+        </div>
+            
+        <div class="nav-buttons">
+            <a href="LogoutServlet" class="btn btn-primary">Cerrar Sesión</a>
+            <a href="index.html" class="btn btn-back">Volver al Inicio</a>
+        </div>      
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

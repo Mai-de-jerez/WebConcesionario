@@ -40,25 +40,25 @@ public class LoginServlet extends HttpServlet {
                 // Lógica de redirección según el rol y el origen
                 // Nota: Asegúrate de que tu Enum Rol tenga el método getNivel()
                 if (u.getRol().getNivel() <= 2) {
-                    response.sendRedirect("admin-panel.jsp");
+                    response.sendRedirect("admin-panel.html");
                     
                 } else if ("compra".equals(origen) && idRegreso != null && !idRegreso.isEmpty()) {
                     response.sendRedirect("DetalleCocheServlet?id=" + idRegreso);
                     
                 } else {
-                    response.sendRedirect("index.jsp"); 
+                    response.sendRedirect("index.html"); 
                 }
                 
             } else {
                 // Si el DAO devuelve null, las credenciales son incorrectas
                 request.setAttribute("error", "Vaya, parece que el usuario o la clave no coinciden.");
-                request.getRequestDispatcher("login.jsp").forward(request, response);
+                request.getRequestDispatcher("login.html").forward(request, response);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error técnico al conectar con el servidor.");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            request.getRequestDispatcher("login.html").forward(request, response);
         }
     }
 }

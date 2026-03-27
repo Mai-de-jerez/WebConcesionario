@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto | Concesionario May</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-body"> 
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="nav-link">Inicio</a>
+            <a href="tienda.html" class="nav-link">Tienda</a>
+            <a href="sobre-nosotros.html" class="nav-link">Sobre Nosotros</a>
+            <a href="contacto.html" class="nav-link">Contacto</a>
+        </div>
+       	<div class="nav-right" id="nav-sesion">
+            </div>
+    </nav>
+
+    <main class="content-area">
+        <div class="container" style="max-width: 1100px;">
+            <h1>Contacto</h1>
+            <div class="form-grid">
+                <div class="linea_divisoria_vertical" style="padding: 20px; border-right: 1px solid #e1e8ed;">
+                    <h2>Nuestros Datos</h2>
+                    <div class="feature-cards" style="grid-template-columns: 1fr; margin: 0;">
+                        <h3>📍 Dirección</h3>
+                        <p>Calle del Motor, 45 (28045 Madrid)</p>
+                        <h3>📞 Teléfono</h3>
+                        <p>910 00 00 00 - 600 00 00 00</p>
+                        <h3>⏰ Horario</h3>
+                        <p>L-V: 09:00 a 20:00 - S: 10:00 a 14:00</p>                      
+                    </div>
+                </div>
+
+                <div>
+                    <h2>Envíanos un mensaje</h2>
+                    <div id="feedback-msj"></div>
+ 
+                    <form id="formContacto" style="display: none;">
+				        <div class="form-group">
+				            <label>Nombre Completo:</label>
+				            <input type="text" id="contactoNombre" name="nombre" required>
+				        </div>
+				        <div class="form-group">
+				            <label>Email:</label>
+				            <input type="email" id="contactoEmail" name="email" readonly style="background-color: #e9ecef; cursor: not-allowed;" required>
+				        </div>
+				        <div class="form-group">
+				            <label>Mensaje:</label>
+				            <textarea id="contactoMensaje" name="mensaje" rows="6" style="width: 100%; padding: 12px 15px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 1em; font-family: inherit;" required></textarea>
+				        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Consulta</button>
+                    </form>
+
+                    <div id="bloque-registro" style="display: none; text-align: center; margin-top: 15px;">
+                        <p style="color: #d9534f; font-weight: bold; margin-bottom: 10px;">
+                            ⚠️ Debes estar registrado para usar el formulario
+                        </p>
+                        <a href="login.html" class="btn-nav" style="display: block; background-color: #007bff; color: white; text-decoration: none; padding: 10px; border-radius: 5px;">
+                            Ir al Login ahora
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Concesionario May. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="js/nav-session.js"></script>
+    <script type="text/javascript">
+	    document.addEventListener("DOMContentLoaded", async () => {
+	        const form = document.getElementById("formContacto");
+	        const bloqueRegistro = document.getElementById("bloque-registro");
+	        
+	        try {
+	            const res = await fetch('Auth_Sv?accion=verificar');
+	            
+	            if (res.ok) {
+	                const usuario = await res.json();
+	                // Usuario logueado: mostramos formulario y rellenamos datos
+	                form.style.display = "block";
+	                document.getElementById("contactoNombre").value = usuario.nombre;
+	                document.getElementById("contactoEmail").value = usuario.email; // Asegúrate que tu Auth_Sv mande el email
+	            } else {
+	                // Usuario no logueado: mostramos aviso
+	                bloqueRegistro.style.display = "block";
+	            }
+	        } catch (err) {
+	            bloqueRegistro.style.display = "block";
+	        }
+	
+	        // Manejar el envío del formulario por AJAX
+	        form.onsubmit = async (e) => {
+	            e.preventDefault();
+	            const formData = new FormData(form);
+	            
+	            const res = await fetch('EnviarMensaje', {
+	                method: 'POST',
+	                body: new URLSearchParams(formData)
+	            });
+	
+	            const feedback = document.getElementById("feedback-msj");
+	            if (res.ok) {
+	                feedback.innerHTML = `<div class="message-success" style="color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px;">✅ Mensaje enviado con éxito.</div>`;
+	                form.reset();
+	            } else {
+	                feedback.innerHTML = `<div class="message-error" style="color: #721c24; background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px;">❌ Error al enviar el mensaje.</div>`;
+	            }
+	        };
+	    });
+    </script>
+</body>
+</html>

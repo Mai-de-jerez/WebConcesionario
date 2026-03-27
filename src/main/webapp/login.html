@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Gestión de Vehículos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container login-container">
+        <h1 id="tituloLogin">🔐 Iniciar Sesión</h1>
+       		
+        <div id="error-container" style="display: none; color: white; background-color: #d9534f; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center;">
+        </div>
+
+        <form id="loginForm" action="Login" method="POST">
+        
+            <input type="hidden" id="origen" name="origen" value="">
+        	<input type="hidden" id="idRegreso" name="idRegreso" value="">
+        
+            <div class="form-group">
+                <label for="usuario">Usuario:</label>
+                <input type="text" id="usuario" name="usuario" required placeholder="Ingrese su usuario">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required placeholder="Ingrese su contraseña">
+            </div>
+            
+            <div class="form-register">
+                <span>¿No tienes cuenta?</span>
+                <a href="alta-usuario.html">Regístrate aquí</a>
+            </div>
+            <div class="form-register">
+		        <a href="olvido-password.html">¿Has olvidado tu contraseña?</a>
+		    </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Ingresar</button>
+        </form>
+
+        <a href="index.html" class="btn btn-back" style="width: 100%; display: block; margin-top: 15px;">Volver al Inicio</a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. LEER PARÁMETROS DE LA URL (Sustituye a request.getParameter)
+            const params = new URLSearchParams(window.location.search);
+            const origen = params.get('origen');
+            const idRegreso = params.get('idRegreso');
+            const error = params.get('error'); // El Servlet puede mandar ?error=Mensaje
+
+            // 2. LÓGICA DE TÍTULO DINÁMICO
+            if (origen === "compra") {
+                document.getElementById("tituloLogin").textContent = "🛒 Inicia sesión para comprar";
+            }
+
+            // 3. RELLENAR CAMPOS OCULTOS
+            if (origen) document.getElementById("origen").value = origen;
+            if (idRegreso) document.getElementById("idRegreso").value = idRegreso;
+
+            // 4. MOSTRAR ERROR SI EXISTE
+            if (error) {
+                const errorDiv = document.getElementById("error-container");
+                errorDiv.textContent = decodeURIComponent(error);
+                errorDiv.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -39,7 +39,7 @@ public class LogoutServlet extends HttpServlet {
         }
         
         // 3. Redirigimos al index con un mensajito de despedida
-        response.sendRedirect("index.jsp?mensaje=Has cerrado sesion correctamente. ¡Vuelve pronto!");
+        response.sendRedirect("index.html?mensaje=Has cerrado sesion correctamente. ¡Vuelve pronto!");
     }
 
 	/**

@@ -45,9 +45,9 @@ public class DetalleCocheServlet extends HttpServlet {
 	            if (coche != null) {
 	                request.setAttribute("cocheDetalle", coche);
 	                request.setAttribute("modoAdmin", esModoAdmin);
-	                request.getRequestDispatcher("detalle_coche.jsp").forward(request, response);
+	                request.getRequestDispatcher("detalle_coche.html").forward(request, response);
 	            } else {
-	                response.sendRedirect(esModoAdmin ? "ListarVehiculos" : "Tienda");
+	                response.sendRedirect(esModoAdmin ? "Coche_Sv?accion=listar" : "Tienda");
 	            }
 	            
 	        } catch (Exception e) { 
