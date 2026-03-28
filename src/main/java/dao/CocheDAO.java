@@ -19,27 +19,34 @@ public class CocheDAO {
         }
         return instance;
     }
-  
 
     
     public List<Coche> listarAdmin(String busqueda, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
-            String jpql = "SELECT c FROM Coche c WHERE 1=1";
+   
+            StringBuilder jpql = new StringBuilder("SELECT c FROM Coche c WHERE 1=1");
+     
+            boolean esSoloNumero = (busqueda != null && busqueda.matches("\\d+"));
 
             if (busqueda != null && !busqueda.isBlank()) {
- 
-                jpql += " AND (LOWER(c.marca) LIKE :b OR LOWER(c.modelo) LIKE :b " +
-                        "OR LOWER(c.matricula) LIKE :b OR LOWER(c.tipoMotor) LIKE :b " +
-                        "OR CAST(c.id AS string) LIKE :b)"; 
+                if (esSoloNumero) {
+                    jpql.append(" AND c.id = :idExacto");
+                } else {
+                    jpql.append(" AND (LOWER(c.marca) LIKE :b OR LOWER(c.modelo) LIKE :b " +
+                                "OR LOWER(c.matricula) LIKE :b OR LOWER(c.tipoMotor) LIKE :b)");
+                }
             }
 
-            jpql += " ORDER BY c.id DESC";
-
-            TypedQuery<Coche> query = em.createQuery(jpql, Coche.class);
+            jpql.append(" ORDER BY c.id DESC");
+            TypedQuery<Coche> query = em.createQuery(jpql.toString(), Coche.class);
 
             if (busqueda != null && !busqueda.isBlank()) {
-                query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+                if (esSoloNumero) {
+                    query.setParameter("idExacto", Integer.parseInt(busqueda));
+                } else {
+                    query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+                }
             }
 
             query.setFirstResult((pagina - 1) * porPagina);

@@ -8,7 +8,6 @@
 </head>
 <body>
 <div class="container">
-	<div id="mensaje-error" style="display: none;"></div>
 	
     <div class="header-actions">
         <h1>🚗 Lista de Vehículos</h1>
@@ -41,7 +40,11 @@
         </table>
     </div>
 
-    <div id="paginacion" class="paginacion-container"></div>
+    <div class="paginacion-container">
+                <button type="button" id="pag-anterior" class="btn-ver">Anterior</button>
+                <span id="num-pagina">Página 1</span>
+                <button type="button" id="pag-siguiente" class="btn-ver">Siguiente</button>
+            </div>
 
     <div class="nav-buttons">
         <a href="admin-panel.html" class="btn btn-back">Volver al Panel</a>
@@ -57,7 +60,6 @@ let estado = {
 	document.addEventListener("DOMContentLoaded", () => {
 	    cargarCoches();
 
-	    // Búsqueda con debounce para no saturar el servidor
 	    let timer;
 	    document.getElementById("inputBusqueda").addEventListener("input", (e) => {
 	        clearTimeout(timer);
@@ -77,31 +79,35 @@ let estado = {
 	    };
 	});
 
+
 	async function cargarCoches() {
+	    setLoading(8); 
 	    try {
 	        const res = await fetch(`Coche_Sv?accion=listar&pagina=${estado.pagina}&busqueda=${encodeURIComponent(estado.busqueda)}`);
-	        
-	        // Si el Servlet dice que no estás logueada (401 o 403), a la calle
+	   
 	        if (res.status === 401 || res.status === 403) {
 	            window.location.href = "login.html";
 	            return;
 	        }
 
 	        const data = await res.json();
+	
+	        if (!data.coches || data.coches.length === 0) {
+	            setVacio("No hay coches con ese filtro", 8); 
+	            renderPaginacion(0);
+	            return;
+	        }
+
 	        renderTabla(data.coches);
 	        renderPaginacion(data.totalPaginas);
 	    } catch (err) {
-	    	mostrarMensaje("Error al conectar con el servidor", "error");
+	        setError("Error al conectar con el servidor");
 	    }
 	}
 
 	function renderTabla(coches) {
-	    const tbody = document.getElementById("cuerpoTabla");
-	    if (!coches || coches.length === 0) {
-	        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No se encontraron vehículos.</td></tr>';
-	        return;
-	    }
 
+		const tbody = document.getElementById("cuerpoTabla");
 	    tbody.innerHTML = coches.map(c => `
 	        <tr>
 	            <td style="font-weight: bold; color: #764ba2;">${c.id}</td>
@@ -112,7 +118,7 @@ let estado = {
 	            <td>${c.color || '-'}</td>
 	            <td>${c.km.toLocaleString()}</td>
 	            <td class="actions">
-	            <a href="detalle_coche.html?id=${c.id}&admin=true" class="row-btn btn-success btn-small">Ver más</a>
+	            <a href="detalle_coche_admin.html?id=${c.id}&admin=true" class="row-btn btn-success btn-small">Ver más</a>
 	         
 	                   
 	                <a href="form-vehiculo.html?id=${c.id}" class="row-btn btn-primary btn-small">Editar</a>
@@ -126,38 +132,26 @@ let estado = {
 	}
 	
 	function renderPaginacion(total) {
-	    const pContainer = document.getElementById("paginacion");
-	    
-	    // Si no hay páginas o solo hay una, no pintamos nada (como en tu JSP)
-	    if (!total || total <= 1) { 
-	        pContainer.innerHTML = ""; 
-	        return; 
-	    }
+	    const btnAnt = document.getElementById("pag-anterior");
+	    const btnSig = document.getElementById("pag-siguiente");
+	    const info = document.getElementById("num-pagina");
 
-	    let html = "";
+	    if (!info || !btnAnt || !btnSig) return;
 
-	    // Botón Anterior (solo si no estamos en la página 1)
-	    if (estado.pagina > 1) {
-	        html += `<a href="#" class="btn btn-secondary" 
-	                    onclick="event.preventDefault(); cambiarPagina(${estado.pagina - 1})">← Anterior</a>`;
-	    }
+	    // Si solo hay una página, ocultamos el contenedor
+	    const container = document.querySelector(".paginacion-container");
+	    container.style.display = (total <= 1) ? "none" : "flex";
 
-	    // Números de página
-	    for (let i = 1; i <= total; i++) {
-	        // Si es la página actual, le metemos 'btn-primary', si no 'btn-secondary'
-	        const claseColor = (i === estado.pagina) ? 'btn-primary' : 'btn-secondary';
-	        
-	        html += `<a href="#" class="btn ${claseColor}" 
-	                    onclick="event.preventDefault(); cambiarPagina(${i})">${i}</a>`;
-	    }
+	    // Actualizamos el texto: "Página 1 de 3"
+	    info.textContent = `Página ${estado.pagina} de ${total || 1}`;
 
-	    // Botón Siguiente (solo si no estamos en la última página)
-	    if (estado.pagina < total) {
-	        html += `<a href="#" class="btn btn-secondary" 
-	                    onclick="event.preventDefault(); cambiarPagina(${estado.pagina + 1})">Siguiente →</a>`;
-	    }
+	    // Bloqueo de botones
+	    btnAnt.disabled = (estado.pagina <= 1);
+	    btnSig.disabled = (estado.pagina >= total || total === 0);
 
-	    pContainer.innerHTML = html;
+	    // Asignamos eventos limpios
+	    btnAnt.onclick = () => { if(estado.pagina > 1) cambiarPagina(estado.pagina - 1); };
+	    btnSig.onclick = () => { if(estado.pagina < total) cambiarPagina(estado.pagina + 1); };
 	}
 
 	function cambiarPagina(n) {
@@ -172,11 +166,12 @@ let estado = {
 	    const data = await res.json();
 	    
 	    if (data.resultado === "OK") {
-	        cargarCoches(); // Recargamos la lista sin refrescar la página
+	        cargarCoches(); 
 	    } else {
 	        mostrarMensaje("No se pudo eliminar el coche", "error");
 	    }
 	}
+	
 </script>
 </body>
 </html>

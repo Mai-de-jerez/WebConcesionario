@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Concesionarios May | Detalle Vehiculo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-body">
+	<nav class="navbar">
+	    <div class="nav-left">
+	        <a href="index.html" class="nav-link">Inicio</a>
+	        <a href="tienda.html" class="nav-link">Tienda</a>
+	        <a href="sobre-nosotros.html" class="nav-link">Sobre Nosotros</a>
+	        <a href="contacto.html" class="nav-link">Contacto</a>
+	    </div>
+	    <div class="nav-right" id="nav-sesion">
+	        </div>        
+	</nav>	
+    <main class="content-area">
+        <div class="container" style="max-width: 900px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: start;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="feature-card" style="padding: 10px;">
+                        <img id="img-coche" src="img/sin-foto.png" style="width:100%; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-height: 200px; object-fit: cover;">
+                    </div>
+                </div>
+                <div style="flex: 1.2; min-width: 300px;">
+                    <h1 style="font-size: 2.5em; margin-bottom: 20px;">
+                        <span id="marca-txt" style="color: #764ba2;"></span>
+                        <span id="modelo-txt"></span>
+                    </h1>
+                    <div class="table-container">
+                        <table>
+                            <tbody>
+					            <tr><td><strong>Marca</strong></td><td id="val-marca"></td></tr>
+					            <tr><td><strong>Modelo</strong></td><td id="val-modelo-fila"></td></tr>					            
+					            <tr><td><strong>Matrícula</strong></td><td id="val-matricula"></td></tr>
+					            <tr><td><strong>Color</strong></td><td id="val-color"></td></tr>					            
+					            <tr><td><strong>Precio</strong></td><td id="val-precio" style="font-size: 1.5em; color: #28a745; font-weight: bold;"></td></tr>					            
+					            <tr><td><strong>Kilómetros</strong></td><td id="val-km"></td></tr>
+					            <tr><td><strong>Año de fabricación</strong></td><td id="val-anio"></td></tr>
+					            <tr><td><strong>Tipo de Motor</strong></td><td id="val-motor"></td></tr>
+					            <tr><td><strong>Número de Puertas</strong></td><td id="val-puertas"></td></tr>					            
+					            <tr><td><strong>Disponibilidad</strong></td><td id="val-estado"></td></tr>
+					            <tr><td><strong>Descripción</strong></td><td id="val-desc"></td></tr>
+					        </tbody>
+                        </table>
+                    </div>
+                    <div class="form-buttons" style="margin-top: 25px; gap: 10px; display: flex;">
+                        <a id="link-carrito" href="#" class="btn btn-success">🛒 Añadir a la cesta</a>
+                        <a href="Tienda" class="btn btn-back">Volver a la Tienda</a>
+                    </div>                                 
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="js/nav-session.js"></script>
+	<script>
+		document.addEventListener("DOMContentLoaded", async () => {
+		    const params = new URLSearchParams(window.location.search);
+		    const id = params.get("id");
+		    if (!id) return;
+	
+		    try {
+		        // 1. CARGAMOS LOS DATOS DEL COCHE
+		        const resCoche = await fetch(`Coche_Sv?accion=detalle&id=${id}`);
+		        const c = await resCoche.json();
+	
+		        // Rellenamos la tabla (Marca, Modelo, Precio, etc.)
+		        document.getElementById("img-coche").src = `img/${c.imagen || 'sin-foto.png'}`;
+		        document.getElementById("marca-txt").textContent = c.marca;
+		        document.getElementById("modelo-txt").textContent = c.modelo;
+		        document.getElementById("val-marca").textContent = c.marca;
+		        document.getElementById("val-modelo-fila").textContent = c.modelo;
+		        document.getElementById("val-matricula").textContent = c.matricula || "-";
+		        document.getElementById("val-color").textContent = c.color || "-";
+		        document.getElementById("val-precio").textContent = `${c.precio.toLocaleString()} €`;
+		        document.getElementById("val-km").textContent = `${c.km.toLocaleString()} km`;
+		        document.getElementById("val-anio").textContent = c.anio;
+		        document.getElementById("val-motor").textContent = c.tipoMotor;
+		        document.getElementById("val-puertas").textContent = c.numPuertas;
+		        document.getElementById("val-estado").textContent = c.estado || "Disponible";
+		        document.getElementById("val-desc").textContent = c.descripcion || "Sin descripción.";
+	
+		        const btnAccion = document.getElementById("link-carrito");
+		
+		        const resUser = await fetch('Login');
+	
+		        if (resUser.ok) {
+		
+		            const usuario = await resUser.json();
+		            btnAccion.textContent = "🛒 Añadir a la cesta";
+		            btnAccion.className = "btn btn-success";
+		            btnAccion.href = `Carrito?idCoche=${c.id}&precioCoche=${c.precio}`;
+		        } else {
+	
+		            btnAccion.textContent = "Comprar";
+		            btnAccion.className = "btn btn-secondary";
+	
+		            btnAccion.href = `login.jsp?origen=compra&idRegreso=${c.id}`;
+		        }
+	
+		    } catch (error) {
+		        console.error("Error en la carga:", error);
+		        document.getElementById("link-carrito").textContent = "Comprar";
+		        document.getElementById("link-carrito").href = "login.jsp";
+		    }
+		});
+	</script>
+	
+</body>
+</html>

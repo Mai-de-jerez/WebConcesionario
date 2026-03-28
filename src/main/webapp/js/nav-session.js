@@ -7,19 +7,19 @@ async function gestionarNavegacion() {
     
     try {
         // Llamamos al Auth_Sv para ver quién está logueado
-        const res = await fetch('Auth_Sv?accion=verificar');
+        const res = await fetch('Login');
         
         if (res.ok) {
             const usuario = await res.json();
             
-            // CASO: ADMIN O STAFF (Nivel <= 2)
+            // ADMIN O STAFF (Nivel <= 2)
             if (usuario.nivel <= 2) {
                 navRight.innerHTML = `
-                    <a href="admin_panel.html" class="btn-nav">Panel Admin</a>
+                    <a href="admin-panel.html" class="btn-nav">Panel Admin</a>
                     <a href="LogoutServlet" class="nav-link" style="margin-left:10px;">Salir</a>
                 `;
             } 
-            // CASO: CLIENTE (Nivel > 2)
+            // CLIENTE (Nivel > 2)
             else {
                 navRight.innerHTML = `
                     <span class="nav-link">Hola, ${usuario.nombre}</span>
@@ -28,7 +28,7 @@ async function gestionarNavegacion() {
                 `;
             }
         } else {
-            // CASO: NADIE LOGUEADO (Error 401 o 403)
+            // NADIE LOGUEADO (Error 401 o 403)
             navRight.innerHTML = `<a href="login.html" class="btn-nav">Login</a>`;
         }
     } catch (err) {

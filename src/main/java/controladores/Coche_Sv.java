@@ -200,6 +200,7 @@ public class Coche_Sv extends HttpServlet {
         c.setKm(ServletUtil.parsearInt(request.getParameter("km"), "km"));
         c.setAnio(request.getParameter("anio"));
         c.setTipoMotor(TipoMotor.valueOf(request.getParameter("tipoMotor")));
+        c.setNumPuertas(ServletUtil.parsearInt(request.getParameter("numPuertas"), "puertas"));
         c.setEstado(EstadoVehiculo.valueOf(request.getParameter("estado")));
         c.setDescripcion(ServletUtil.sanitizar(request.getParameter("descripcion")));
         return c;

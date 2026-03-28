@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión: Detalle Admin | May Cars</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-body">
+    <main class="content-area">
+        <div class="container" style="max-width: 900px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: start;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="feature-card" style="padding: 10px; cursor: default;">
+                        <img id="img-coche" src="img/sin-foto.png" style="width:100%; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-height: 200px; object-fit: cover;">
+                    </div>
+                </div>
+                <div style="flex: 1.2; min-width: 300px;">
+                    <h1 style="font-size: 2.5em; display: flex; align-items: baseline; gap: 15px; flex-wrap: wrap;">
+                        <span id="marca-txt" style="color: #764ba2;"></span>
+                        <span id="modelo-txt" style="color: #333;"></span>
+                    </h1>
+                    <div class="table-container" style="margin: 0;">
+                        <table style="font-size: 0.95em;">
+                            <tbody>
+                            	<tr><td><strong>ID Vehículo (Interno)</strong></td><td id="val-id" style="font-weight: bold; color: #764ba2;"></td></tr>
+                            	<tr><td><strong>Marca</strong></td><td id="val-marca"></td></tr>
+					            <tr><td><strong>Modelo</strong></td><td id="val-modelo-fila"></td></tr>	
+                                <tr><td><strong>Matrícula</strong></td><td id="val-matricula"></td></tr>
+                                <tr><td><strong>Precio</strong></td><td id="val-precio"></td></tr>
+                                <tr><td><strong>Kilómetros</strong></td><td id="val-km"></td></tr>
+                                <tr><td><strong>Año de fabricación</strong></td><td id="val-anio"></td></tr>
+                                <tr><td><strong>Motor</strong></td><td id="val-motor"></td></tr>
+                                <tr><td><strong>Puertas</strong></td><td id="val-puertas"></td></tr>
+                                <tr><td><strong>Estado</strong></td><td id="val-estado"></td></tr>
+                                <tr><td><strong>Descripción</strong></td><td id="val-desc"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-buttons" style="justify-content: flex-start; margin-top: 25px; gap: 10px; display: flex;">
+                        <a id="link-editar" href="#" class="btn btn-primary">✏️ Editar Vehículo</a>
+                        <a href="coche_admin.html" class="btn btn-back">Volver al Panel</a>
+                    </div>                                 
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const id = new URLSearchParams(window.location.search).get("id");
+            if(!id) return;
+            const res = await fetch(`Coche_Sv?accion=detalle&id=${id}`);
+            const c = await res.json();
+            
+            document.getElementById("img-coche").src = `img/${c.imagen || 'sin-foto.png'}`;
+            document.getElementById("marca-txt").textContent = c.marca;
+            document.getElementById("modelo-txt").textContent = c.modelo;
+            document.getElementById("val-id").textContent = c.id;
+            document.getElementById("val-marca").textContent = c.marca;
+	        document.getElementById("val-modelo-fila").textContent = c.modelo;
+            document.getElementById("val-matricula").textContent = c.matricula;
+            document.getElementById("val-precio").textContent = `${c.precio.toLocaleString()} €`;
+            document.getElementById("val-km").textContent = `${c.km.toLocaleString()} km`;
+            document.getElementById("val-anio").textContent = c.anio;
+            document.getElementById("val-motor").textContent = c.tipoMotor; 
+            document.getElementById("val-puertas").textContent = c.numPuertas;
+            document.getElementById("val-estado").textContent = c.estado;
+            document.getElementById("val-desc").textContent = c.descripcion || "Sin descripción.";
+            document.getElementById("link-editar").href = `form-vehiculo.html?id=${c.id}`;
+        });
+    </script>
+</body>
+</html>
