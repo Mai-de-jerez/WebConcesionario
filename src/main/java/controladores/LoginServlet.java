@@ -7,8 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import modelo.Usuario;
+import util.ServletUtil;
 import dao.UsuarioDAO; // Importamos el DAO
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/Login")
 public class LoginServlet extends HttpServlet {
@@ -18,47 +21,58 @@ public class LoginServlet extends HttpServlet {
         super();
     }
 
+ 
+    
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher("login.jsp").forward(request, response);
-    }
+        HttpSession sesion = request.getSession(false);
+        Usuario u = (sesion != null) ? (Usuario) sesion.getAttribute("usuarioLogueado") : null;
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {       
-   
+        if (u != null) {
+      
+            Map<String, Object> respuestaJS = new HashMap<>();
+            respuestaJS.put("nombre", u.getNombre());
+            respuestaJS.put("usuario", u.getUsuario());
+            respuestaJS.put("nivel", u.getRol().getNivel());
+            respuestaJS.put("id_usuario", u.getId_usuario());
+
+            ServletUtil.enviarRespuesta(response, respuestaJS);
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Sesión no iniciada"));
+        }
+    }
+    
+    
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {        
         String user = request.getParameter("usuario");
         String pass = request.getParameter("password");
-        String origen = request.getParameter("origen");
-        String idRegreso = request.getParameter("idRegreso");
 
         try {
-            // CAMBIO CLAVE: Ahora llamamos al Singleton del DAO que usa JPA
             Usuario u = UsuarioDAO.getInstance().validar(user, pass);
 
             if (u != null) {
+   
                 HttpSession sesion = request.getSession();
                 sesion.setAttribute("usuarioLogueado", u);
-             
-                // Lógica de redirección según el rol y el origen
-                // Nota: Asegúrate de que tu Enum Rol tenga el método getNivel()
-                if (u.getRol().getNivel() <= 2) {
-                    response.sendRedirect("admin-panel.html");
-                    
-                } else if ("compra".equals(origen) && idRegreso != null && !idRegreso.isEmpty()) {
-                    response.sendRedirect("DetalleCocheServlet?id=" + idRegreso);
-                    
-                } else {
-                    response.sendRedirect("index.html"); 
-                }
+
+                Map<String, Object> respuestaJS = new HashMap<>();
+                respuestaJS.put("nombre", u.getNombre());
+                respuestaJS.put("usuario", u.getUsuario());
+                respuestaJS.put("nivel", u.getRol().getNivel()); 
+                respuestaJS.put("id_usuario", u.getId_usuario());
+
+                System.out.println("✅ Login exitoso para: " + u.getUsuario() + " (Nivel: " + u.getRol().getNivel() + ")");
                 
+                ServletUtil.enviarRespuesta(response, respuestaJS);
+
             } else {
-                // Si el DAO devuelve null, las credenciales son incorrectas
-                request.setAttribute("error", "Vaya, parece que el usuario o la clave no coinciden.");
-                request.getRequestDispatcher("login.html").forward(request, response);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                ServletUtil.enviarRespuesta(response, java.util.Map.of("resultado", "ERROR", "mensaje", "Credenciales incorrectas"));
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Error técnico al conectar con el servidor.");
-            request.getRequestDispatcher("login.html").forward(request, response);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            ServletUtil.manejarError(response, e);
         }
     }
 }

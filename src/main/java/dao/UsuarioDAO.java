@@ -43,23 +43,33 @@ public class UsuarioDAO {
         return null;
     }
 
+    
     public List<Usuario> listar(String busqueda, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
-            String jpql = "SELECT u FROM Usuario u WHERE 1=1";
+            StringBuilder jpql = new StringBuilder("SELECT u FROM Usuario u WHERE 1=1");
+
+            boolean esSoloNumero = (busqueda != null && busqueda.matches("\\d+"));
 
             if (busqueda != null && !busqueda.isBlank()) {
-                jpql += " AND (LOWER(u.nombre) LIKE :b OR LOWER(u.apellidos) LIKE :b " +
-                        "OR LOWER(u.usuario) LIKE :b OR LOWER(u.email) LIKE :b " +
-                        "OR CAST(u.id_usuario AS string) LIKE :b)";
+                if (esSoloNumero) {
+                    jpql.append(" AND u.id_usuario = :idExacto");
+                } else {
+                    jpql.append(" AND (LOWER(u.nombre) LIKE :b OR LOWER(u.apellidos) LIKE :b " +
+                            "OR LOWER(u.usuario) LIKE :b OR LOWER(u.email) LIKE :b)");
+                }
             }
 
-            jpql += " ORDER BY u.id_usuario ASC";
+            jpql.append(" ORDER BY u.id_usuario ASC");
 
-            TypedQuery<Usuario> query = em.createQuery(jpql, Usuario.class);
+            TypedQuery<Usuario> query = em.createQuery(jpql.toString(), Usuario.class);
 
             if (busqueda != null && !busqueda.isBlank()) {
-                query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+                if (esSoloNumero) {
+                    query.setParameter("idExacto", Integer.parseInt(busqueda));
+                } else {
+                    query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+                }
             }
 
             query.setFirstResult((pagina - 1) * porPagina);
@@ -71,22 +81,31 @@ public class UsuarioDAO {
         }
     }
 
+
     
     public long contarTodos(String busqueda) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
+            boolean esSoloNumero = (busqueda != null && busqueda.matches("\\d+"));
             String jpql = "SELECT COUNT(u) FROM Usuario u WHERE 1=1";
 
             if (busqueda != null && !busqueda.isBlank()) {
-                jpql += " AND (LOWER(u.nombre) LIKE :b OR LOWER(u.apellidos) LIKE :b " +
-                        "OR LOWER(u.usuario) LIKE :b OR LOWER(u.email) LIKE :b " +
-                        "OR CAST(u.id_usuario AS string) LIKE :b)";
+                if (esSoloNumero) {
+                    jpql += " AND u.id_usuario = :idExacto";
+                } else {
+                    jpql += " AND (LOWER(u.nombre) LIKE :b OR LOWER(u.apellidos) LIKE :b " +
+                            "OR LOWER(u.usuario) LIKE :b OR LOWER(u.email) LIKE :b)";
+                }
             }
 
             TypedQuery<Long> query = em.createQuery(jpql, Long.class);
 
             if (busqueda != null && !busqueda.isBlank()) {
-                query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+                if (esSoloNumero) {
+                    query.setParameter("idExacto", Integer.parseInt(busqueda));
+                } else {
+                    query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
+                }
             }
 
             return query.getSingleResult();

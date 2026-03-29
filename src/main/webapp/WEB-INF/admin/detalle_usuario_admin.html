@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Usuario | May Cars</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-body">
+    <main class="content-area">
+        <div class="container" style="max-width: 900px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: start;">
+
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="feature-card" style="padding: 10px; cursor: default;">
+                        <img id="img-usuario" src="img/sin-foto.png" style="width:100%; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-height: 200px; object-fit: cover;">
+                    </div>
+                </div>
+
+                <div style="flex: 1.2; min-width: 300px;">
+                    <h1 style="font-size: 2.5em; display: flex; align-items: baseline; gap: 15px; flex-wrap: wrap;">
+                        <span id="username-txt" style="color: #764ba2;"></span>
+                    </h1>
+
+                    <div class="table-container" style="margin: 0;">
+                        <table style="font-size: 0.95em;">
+                            <tbody>
+                                <tr><td><strong>ID Usuario</strong></td><td id="val-id" style="font-weight: bold; color: #764ba2;"></td></tr>
+                                <tr><td><strong>Username</strong></td><td id="val-usuario"></td></tr>
+                                <tr><td><strong>Nombre</strong></td><td id="val-nombre"></td></tr>
+                                <tr><td><strong>Apellidos</strong></td><td id="val-apellidos"></td></tr>
+                                <tr><td><strong>Email</strong></td><td id="val-email"></td></tr>
+                                <tr><td><strong>Teléfono</strong></td><td id="val-telefono"></td></tr>
+                                <tr><td><strong>Dirección</strong></td><td id="val-direccion"></td></tr>
+                                <tr><td><strong>Rol</strong></td><td id="val-rol"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-buttons" style="justify-content: flex-start; margin-top: 25px; gap: 10px; display: flex;">
+                        <a id="link-editar" href="#" class="btn btn-primary">✏️ Editar Usuario</a>
+                        <a href="admin?vista=usuarios" class="btn btn-back">Volver a la Lista</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const id = new URLSearchParams(window.location.search).get("id");
+            if (!id) return;
+
+            const res = await fetch(`Usuario_Sv?accion=detalle&id=${id}`);
+            const u = await res.json();
+
+            document.getElementById("img-usuario").src = `img/${u.foto || 'sin-foto.png'}`;
+            document.getElementById("username-txt").textContent = u.usuario;
+            document.getElementById("val-id").textContent = u.id_usuario;
+            document.getElementById("val-usuario").textContent = u.usuario;
+            document.getElementById("val-nombre").textContent = u.nombre || "---";
+            document.getElementById("val-apellidos").textContent = u.apellidos || "---";
+            document.getElementById("val-email").textContent = u.email;
+            document.getElementById("val-telefono").textContent = u.telefono || "No registrado";
+            document.getElementById("val-direccion").textContent = u.direccion || "No registrada";
+            document.getElementById("val-rol").textContent = u.rol;
+            document.getElementById("link-editar").href = `admin?vista=form-usuario&id=${u.id_usuario}`;
+        });
+    </script>
+</body>
+</html>

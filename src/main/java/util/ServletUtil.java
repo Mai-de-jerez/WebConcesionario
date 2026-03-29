@@ -4,11 +4,19 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
+import java.time.LocalDateTime;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class ServletUtil {
     
-    private static final Gson gson = new Gson();
+	private static final Gson gson = new GsonBuilder()
+		    .registerTypeAdapter(LocalDateTime.class,
+		        (JsonSerializer<LocalDateTime>)
+		        (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
+		    .create();
 
     // Tu método estrella: Limpia etiquetas HTML para evitar ataques XSS básicos
     public static String sanitizar(String texto) {

@@ -38,7 +38,7 @@
                     </div>
                     <div class="form-buttons" style="justify-content: flex-start; margin-top: 25px; gap: 10px; display: flex;">
                         <a id="link-editar" href="#" class="btn btn-primary">✏️ Editar Vehículo</a>
-                        <a href="coche_admin.html" class="btn btn-back">Volver al Panel</a>
+                        <a href="admin?vista=coches" class="btn btn-back">Volver al Panel</a>
                     </div>                                 
                 </div>
             </div>
@@ -65,7 +65,7 @@
             document.getElementById("val-puertas").textContent = c.numPuertas;
             document.getElementById("val-estado").textContent = c.estado;
             document.getElementById("val-desc").textContent = c.descripcion || "Sin descripción.";
-            document.getElementById("link-editar").href = `form-vehiculo.html?id=${c.id}`;
+            document.getElementById("link-editar").href = `admin?vista=form-vehiculo&id=${c.id}`;
         });
     </script>
 </body>

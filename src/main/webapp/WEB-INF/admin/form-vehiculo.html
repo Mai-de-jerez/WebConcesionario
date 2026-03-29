@@ -9,8 +9,8 @@
 <body>
     <div class="container">
         <h1 id="tituloPagina">➕ Alta de Vehículo (Turismo)</h1>
-
-        <form id="formVehiculo" action="AltaVehiculo" method="post" enctype="multipart/form-data">
+		<div id="notificacion" class="message" style="display:none"></div>
+        <form id="formVehiculo" action="AltaVehiculo" method="post" enctype="multipart/form-data" novalidate>
             
             <input type="hidden" id="idCoche" name="id">
             <input type="hidden" id="imagen_actual" name="imagen_actual">
@@ -19,91 +19,111 @@
 		        <div class="form-group">
 		            <label for="matricula">Matrícula: *</label>
 		            <input type="text" id="matricula" name="matricula" required placeholder="Ej: 1234ABC">
+		            <span id="error-matricula" class="mensaje-error-campo"></span> 
 		        </div>
 		
 		        <div class="form-group">
 		            <label for="marca">Marca: *</label>
 		            <input type="text" id="marca" name="marca" required placeholder="Ej: Toyota">
+		            <span id="error-marca" class="mensaje-error-campo"></span> 
 		        </div>
 		
 		        <div class="form-group">
 		            <label for="modelo">Modelo: *</label>
 		            <input type="text" id="modelo" name="modelo" required placeholder="Ej: Corolla">
+		            <span id="error-modelo" class="mensaje-error-campo"></span> 
 		        </div>
 		
 		        <div class="form-group">
 		            <label for="color">Color:</label>
 		            <input type="text" id="color" name="color" placeholder="Ej: Blanco">
+		            <span id="error-color" class="mensaje-error-campo"></span> 
 		        </div>
 		
 		        <div class="form-group">
 		            <label for="precio">Precio (€): *</label>
 		            <input type="number" step="0.01" id="precio" name="precio" required placeholder="15000.50">
+		            <span id="error-precio" class="mensaje-error-campo"></span>
 		        </div>
 		
 		        <div class="form-group">
 		            <label for="km">Kilómetros: *</label>
 		            <input type="number" id="km" name="km" required placeholder="Ej: 50000">
+		            <span id="error-km" class="mensaje-error-campo"></span>
 		        </div>
 		
 		        <div class="form-group">
 		            <label for="anio">Año:</label>
 		            <input type="text" id="anio" name="anio" placeholder="Ej: 2023">
+		            <span id="error-anio" class="mensaje-error-campo"></span>
 		        </div>
 
 		        
 		        <div class="form-group">
 				    <label for="tipoMotor">Tipo de Motor: *</label>
 				    <select id="tipoMotor" name="tipoMotor" required>
-					  <option value="GASOLINA">Gasolina</option>
-					  <option value="DIESEL">Diesel</option>
-					  <option value="ELECTRICO">Electrico</option>
-					  <option value="HIBRIDO">Hibrido</option>
+				    	<option value="">-- Selecciona Motor --</option>
+					    <option value="DIESEL">Diesel</option>
+					    <option value="ELECTRICO">Electrico</option>
+					    <option value="HIBRIDO">Hibrido</option>				    
+					    <option value="GASOLINA">Gasolina</option>
 					</select>
+					<span id="error-tipoMotor" class="mensaje-error-campo"></span>
 				</div>
 		
 		        <div class="form-group">
 		            <label for="numPuertas">Número de Puertas:</label>
 		            <select id="numPuertas" name="numPuertas">
+		                <option value="">-- Selecciona Puertas --</option> 
 		                <option value="3">3 puertas</option>
-		                <option value="4" selected>4 puertas</option>
+		                <option value="4">4 puertas</option>
 		                <option value="5">5 puertas</option>
 		            </select>
+		            <span id="error-numPuertas" class="mensaje-error-campo"></span>
 		        </div>
 		 
 		        <div class="form-group">
 				    <label for="estado">Estado:</label>
 				    <select id="estado" name="estado">
+				        <option value="">-- Selecciona Estado --</option>
                         <option value="DISPONIBLE">Disponible</option>
 				        <option value="RESERVADO">Reservado</option>
 				        <option value="VENDIDO">Vendido</option>
 				    </select>
+				    <span id="error-estado" class="mensaje-error-campo"></span>
 				</div>
+				
 							
 		    </div>
 		    <div class="form-group">
 			    <label for="imagen">Foto del vehículo:</label>
                 <div id="previsualizacion"></div>
 			    <input type="file" id="imagen" name="imagen" accept="image/*" style="display: block; width: 100%;">
+			    <span id="error-imagen" class="mensaje-error-campo"></span>
 			    <small style="color: gray;">Formatos aceptados: JPG, PNG, WEBP</small>
 			</div>
 		    
 		    <div class="form-group">
 			    <label for="descripcion">Descripción: *</label>
-			    <input type="text" id="descripcion" name="descripcion" 
-			           required placeholder="Ej: Único dueño, siempre en garaje, revisión recién pasada"> 
+			    <input type="text" id="descripcion" name="descripcion" required placeholder="Ej: El mejor coche... "> 
+			    <span id="error-descripcion" class="mensaje-error-campo"></span>
 			</div>
-		
+			
 		    <div class="form-buttons">
 		        <button type="submit" class="btn btn-success">💾 Guardar Vehículo</button>
                 <button type="reset" class="btn btn-secondary">🔄 Limpiar </button>
-                <a href="coche_admin.html" class="btn btn-back">❌ Cancelar</a>
+                <a href="admin?vista=coches" class="btn btn-back">❌ Cancelar</a>
 		    </div>
+		    
 		</form>
     </div> 
-
+	<script src="js/utils.js"></script>
+	<script src="js/validaciones.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
+        	
+        	configurarLimpiezaErrores("#formVehiculo");
+        	
             const params = new URLSearchParams(window.location.search);
             const id = params.get("id");
             const form = document.getElementById("formVehiculo");
@@ -120,25 +140,31 @@
 
             form.onsubmit = async (e) => {
                 e.preventDefault();
+                
+                if (!validarFormularioCoche()) {
+                    return; 
+                }
                 const formData = new FormData(form);
                 const accion = id ? "editar" : "alta";
                 
                 try {
-                    // Importante usar backticks (`) para la URL
                     const res = await fetch(`Coche_Sv?accion=${accion}`, {
                         method: 'POST',
                         body: formData
                     });
 
                     const data = await res.json();
+                    
                     if (data.resultado === "OK") {
-                        alert(data.mensaje);
-                        window.location.href = "coche_admin.html"; 
+                        mostrarMensaje(data.mensaje, "success");
+                        setTimeout(() => {
+                            window.location.href = "admin?vista=coches";
+                        }, 1500);
                     } else {
-                        alert("Error: " + data.mensaje);
+                        setError("Error: " + data.mensaje);
                     }
                 } catch (err) {
-                    alert("Error de conexión al guardar");
+                    setError("Error de conexión al guardar el vehículo");
                 }
             };
         });
@@ -167,9 +193,11 @@
                             `<img src="img/${c.imagen}" style="max-width: 150px; margin-bottom: 10px; border-radius: 5px; display: block;">`;
                     }
                 }
-            } catch (err) {
-                console.error("Error cargando datos del coche", err);
-            }
+           
+	        } catch (err) {
+	            console.error("Error cargando datos del coche", err);
+	            setError("No se pudieron cargar los datos del vehículo");
+	        }
         }
     </script>
 </body>

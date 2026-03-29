@@ -19,18 +19,16 @@ import servicio.CocheService;
 
 @WebServlet(value = "/Coche_Sv", loadOnStartup = 1)
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
-    maxFileSize = 1024 * 1024 * 10,       // 10MB
-    maxRequestSize = 1024 * 1024 * 50     // 50MB
+    fileSizeThreshold = 1024 * 1024 * 2,  
+    maxFileSize = 1024 * 1024 * 10,      
+    maxRequestSize = 1024 * 1024 * 50     
 )
 public class Coche_Sv extends HttpServlet {
 
     private final CocheService cocheService = new CocheService();
     private static final long serialVersionUID = 1L;
-    
-    // Adaptado a tu estructura de carpetas
     private static final String PATH_IMAGENES = "C:\\Users\\carme\\Proyectos_Java\\WebConcesionario\\src\\main\\webapp\\img";
-    private static final String IMG_DEFECTO = "coche-defecto.png";
+    private static final String IMG_DEFECTO = "sin-foto.png";
 
     @Override
     public void init() throws ServletException {
@@ -80,21 +78,16 @@ public class Coche_Sv extends HttpServlet {
         try {
             String busqueda = request.getParameter("busqueda");
             int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
-            int porPagina = 6; // Olvídate de parsear esto, déjalo fijo a 6 para no liarla
+            int porPagina = 6; 
 
             if (pagina < 1) pagina = 1;
 
-            // 1. La lista de coches (esto está bien)
             List<Coche> lista = cocheService.listarParaAdmin(busqueda, pagina, porPagina);
-            
-            // 2. El total de COCHES (p.ej. 12)
+
             long totalCoches = cocheService.totalCochesAdmin(busqueda);
-            
-            // 3. LA CUENTA DE LAS PÁGINAS (Lo que te falta, leñe)
-            // Dividimos coches entre 6 y redondeamos hacia arriba
+
             int totalPaginas = (int) Math.ceil((double) totalCoches / porPagina);
 
-            // 4. El Mapa con los nombres que tu JS espera
             Map<String, Object> respuesta = Map.of(
                 "coches", lista,
                 "totalPaginas", totalPaginas, 

@@ -1,3 +1,4 @@
+// js/nav-session.js
 document.addEventListener("DOMContentLoaded", () => {
     gestionarNavegacion();
 });
@@ -6,33 +7,34 @@ async function gestionarNavegacion() {
     const navRight = document.getElementById("nav-sesion");
     
     try {
-        // Llamamos al Auth_Sv para ver quién está logueado
-        const res = await fetch('Login');
+        const res = await fetch('Login', {
+            headers: { 'Accept': 'application/json' }
+        });
         
         if (res.ok) {
-            const usuario = await res.json();
+            const datos = await res.json();
             
-            // ADMIN O STAFF (Nivel <= 2)
-            if (usuario.nivel <= 2) {
+            // Usamos directamente 'nivel' que viene del Servlet
+            if (datos.nivel !== undefined && datos.nivel <= 2) {
+                // ADMIN O STAFF
                 navRight.innerHTML = `
-                    <a href="admin-panel.html" class="btn-nav">Panel Admin</a>
+					<a href="admin?vista=panel" class="btn-nav">Panel Admin</a>
                     <a href="LogoutServlet" class="nav-link" style="margin-left:10px;">Salir</a>
                 `;
-            } 
-            // CLIENTE (Nivel > 2)
-            else {
+            } else {
+                // CLIENTE
                 navRight.innerHTML = `
-                    <span class="nav-link">Hola, ${usuario.nombre}</span>
+                    <span class="nav-link">Hola, ${datos.nombre || 'Usuario'}</span>
                     <a href="perfil.html" class="nav-link" style="margin: 0 15px;">Mi Perfil</a>
                     <a href="LogoutServlet" class="btn-nav">Cerrar Sesión</a>
                 `;
             }
         } else {
-            // NADIE LOGUEADO (Error 401 o 403)
+            // Si no hay sesión (401), botón de login
             navRight.innerHTML = `<a href="login.html" class="btn-nav">Login</a>`;
         }
     } catch (err) {
-        // Si el servidor está caído o hay error de red
+        // Si hay error de red, botón de login por seguridad
         navRight.innerHTML = `<a href="login.html" class="btn-nav">Login</a>`;
     }
 }

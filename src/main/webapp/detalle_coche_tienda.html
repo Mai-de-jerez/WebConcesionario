@@ -36,7 +36,7 @@
 					            <tr><td><strong>Modelo</strong></td><td id="val-modelo-fila"></td></tr>					            
 					            <tr><td><strong>Matrícula</strong></td><td id="val-matricula"></td></tr>
 					            <tr><td><strong>Color</strong></td><td id="val-color"></td></tr>					            
-					            <tr><td><strong>Precio</strong></td><td id="val-precio" style="font-size: 1.5em; color: #28a745; font-weight: bold;"></td></tr>					            
+					            <tr><td><strong>Precio</strong></td><td id="val-precio"></td></tr>					            
 					            <tr><td><strong>Kilómetros</strong></td><td id="val-km"></td></tr>
 					            <tr><td><strong>Año de fabricación</strong></td><td id="val-anio"></td></tr>
 					            <tr><td><strong>Tipo de Motor</strong></td><td id="val-motor"></td></tr>
@@ -48,7 +48,7 @@
                     </div>
                     <div class="form-buttons" style="margin-top: 25px; gap: 10px; display: flex;">
                         <a id="link-carrito" href="#" class="btn btn-success">🛒 Añadir a la cesta</a>
-                        <a href="Tienda" class="btn btn-back">Volver a la Tienda</a>
+                        <a href="tienda.html" class="btn btn-back">Volver a la Tienda</a>
                     </div>                                 
                 </div>
             </div>
@@ -63,7 +63,7 @@
 	
 		    try {
 		        // 1. CARGAMOS LOS DATOS DEL COCHE
-		        const resCoche = await fetch(`Coche_Sv?accion=detalle&id=${id}`);
+		        const resCoche = await fetch(`Tienda?accion=detalle&id=${id}`);
 		        const c = await resCoche.json();
 	
 		        // Rellenamos la tabla (Marca, Modelo, Precio, etc.)

@@ -15,21 +15,16 @@
             <a href="sobre-nosotros.html" class="nav-link">Sobre Nosotros</a>
             <a href="contacto.html" class="nav-link">Contacto</a>
         </div>
-        <div class="nav-right" id="nav-sesion"></div>
+        
+        <div class="nav-right" id="nav-sesion">
+            <span class="nav-link">Cargando...</span>
+        </div>
     </nav>
 
     <main class="content-area">
-        <section class="hero">
-            <h1>Tienda de Vehículos</h1>
-            <p>Explora nuestro catálogo y añade tus favoritos a la cesta.</p>
-        </section>
-
         <div class="container">
             <h1>🚗 Unidades Disponibles</h1>
-            
-            <div class="welcome-section">
-                 <p>Haz clic en "Comprar" para añadir tu vehículo al carrito.</p>
-            </div>
+
             
             <div class="feature-cards-shop" id="contenedor-coches">
                 <p>Cargando vehículos...</p>
@@ -40,93 +35,68 @@
     <footer class="main-footer">
         <p>&copy; 2026 Concesionario May. Todos los derechos reservados.</p>
     </footer>
-	<script src="nav-session.js"></script>
-    <script>
-        let usuarioActual = null;
+	<script src="js/nav-session.js"></script>
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            // 1. Primero chequeamos quién es el usuario para saber qué botones poner
-            await verificarSesion();
-            // 2. Cargamos los coches de la base de datos
-            await cargarTienda();
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarTienda();
         });
 
-        async function verificarSesion() {
-            try {
-                const res = await fetch('Auth_Sv?accion=verificar');
-                if (res.ok) {
-                    usuarioActual = await res.json();
-                    pintarNav(usuarioActual);
-                } else {
-                    pintarNav(null);
-                }
-            } catch (err) {
-                pintarNav(null);
-            }
-        }
-
-        function pintarNav(usu) {
-            const navRight = document.getElementById("nav-sesion");
-            if (!usu) {
-                navRight.innerHTML = `<a href="login.html" class="btn-nav">Login</a>`;
-            } else if (usu.nivel <= 2) {
-                navRight.innerHTML = `
-                    <a href="admin-panel.html" class="btn-nav">Panel Admin</a>
-                    <a href="LogoutServlet" class="nav-link" style="margin-left:10px;">Salir</a>`;
-            } else {
-                navRight.innerHTML = `
-                    <span class="nav-link">Hola, ${usu.nombre}</span>
-                    <a href="perfil.html" class="nav-link" style="margin: 0 15px;">Mi Perfil</a>
-                    <a href="LogoutServlet" class="btn-nav">Cerrar Sesión</a>`;
-            }
-        }
-
         async function cargarTienda() {
-            const contenedor = document.getElementById("contenedor-coches");
             try {
-                // Llamamos a tu Servlet de Tienda (asegúrate de que devuelva JSON)
-                const res = await fetch('Tienda_Sv?accion=listarPublico'); 
-                const coches = await res.json();
+                // Solo necesitamos saber si hay alguien para el botón de compra
+                const resUser = await fetch('Login');
+                const usuario = resUser.ok ? await resUser.json() : null;
 
-                if (!coches || coches.length === 0) {
-                    contenedor.innerHTML = "<p>No hay vehículos disponibles en este momento.</p>";
-                    return;
+                // Cargamos los coches
+                const resCoches = await fetch('Tienda');
+                const data = await resCoches.json();
+                
+                renderCoches(data.coches, usuario);
+
+            } catch (error) {
+                console.error("Error cargando la tienda", error);
+                document.getElementById("contenedor-coches").innerHTML = "<p>Error al conectar con el servidor.</p>";
+            }
+        }
+
+        function renderCoches(coches, usu) {
+            const contenedor = document.getElementById("contenedor-coches");
+            
+            if (!coches || coches.length === 0) {
+                contenedor.innerHTML = "<p>No hay vehículos disponibles en este momento.</p>";
+                return;
+            }
+
+            contenedor.innerHTML = coches.map(c => {
+       
+                const foto = c.imagen || c.foto || "sin-foto.png";
+    
+                let botonCompra = "";
+                if (!usu || usu.resultado === "ERROR") {
+                    botonCompra = `<a href="login.html?idRegreso=${c.id}" class="btn btn-secondary btn-small">🛒 Login para comprar</a>`;
+                } else {
+                    botonCompra = `<a href="Carrito?idCoche=${c.id}&precioCoche=${c.precio}" class="btn btn-success btn-small">🛒 Comprar</a>`;
                 }
 
-                // Generamos el HTML de las tarjetas
-                contenedor.innerHTML = coches.map(c => {
-                    const foto = c.imagen ? c.imagen : "sin-foto.png";
-                    
-                    // Lógica del botón de compra
-                    let botonCompra = "";
-                    if (!usuarioActual) {
-                        botonCompra = `<a href="login.html?origen=compra&idRegreso=${c.id}" class="btn btn-success btn-small" style="background-color: #6c757d;">🛒 Comprar</a>`;
-                    } else {
-                        botonCompra = `<a href="Carrito?idCoche=${c.id}&precioCoche=${c.precio}" class="btn btn-success btn-small">🛒 Comprar</a>`;
-                    }
-
-                    return `
-                        <div class="feature-card">
-                            <img src="img/${foto}" alt="${c.modelo}" 
-                                 style="width:100%; border-radius:10px; height:180px; object-fit:cover; margin-bottom:15px;">
-                            
-                            <h3>${c.marca} ${c.modelo}</h3>
-                            <p>${c.tipoMotor} | ${c.km.toLocaleString()} km</p>
-                            <p style="font-weight: bold; color: #764ba2; font-size: 1.3em; margin: 10px 0;">
-                                ${c.precio} €
-                            </p>
-                            
-                            <div class="actions" style="justify-content: center; flex-direction: column; gap: 10px;">
-                                <a href="detalle-coche.html?id=${c.id}" class="btn btn-secondary btn-small">Ver más</a>
-                                ${botonCompra}
-                            </div>
+                return `
+                    <div class="feature-card">
+                        <img src="img/${foto}" alt="${c.modelo}" style="width:100%; border-radius:10px; height:180px; object-fit:cover; margin-bottom:15px;">                 
+                        <h3>${c.marca} ${c.modelo}</h3>
+                        <p>${c.tipoMotor} | ${c.km.toLocaleString()} km</p>
+                        <p style="font-weight: bold; color: #764ba2; font-size: 1.3em; margin: 10px 0;">
+                            ${c.precio.toLocaleString()} €
+                        </p>
+                        
+                        
+                        <div class="actions" style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="detalle_coche_tienda.html?id=${c.id}" class="btn btn-secondary btn-small">Ver más</a>
+                            ${botonCompra}
                         </div>
-                    `;
-                }).join("");
-
-            } catch (err) {
-                contenedor.innerHTML = "<p>Error al conectar con el servidor. Inténtalo más tarde.</p>";
-            }
+                    </div>
+                `;
+            }).join("");
+  
         }
     </script>
 </body>

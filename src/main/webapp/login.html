@@ -15,9 +15,6 @@
 
         <form id="loginForm" action="Login" method="POST">
         
-            <input type="hidden" id="origen" name="origen" value="">
-        	<input type="hidden" id="idRegreso" name="idRegreso" value="">
-        
             <div class="form-group">
                 <label for="usuario">Usuario:</label>
                 <input type="text" id="usuario" name="usuario" required placeholder="Ingrese su usuario">
@@ -41,30 +38,43 @@
 
         <a href="index.html" class="btn btn-back" style="width: 100%; display: block; margin-top: 15px;">Volver al Inicio</a>
     </div>
-
-    <script>
+    <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", () => {
-            // 1. LEER PARÁMETROS DE LA URL (Sustituye a request.getParameter)
-            const params = new URLSearchParams(window.location.search);
-            const origen = params.get('origen');
-            const idRegreso = params.get('idRegreso');
-            const error = params.get('error'); // El Servlet puede mandar ?error=Mensaje
+            const form = document.getElementById("loginForm");
+            const errorDiv = document.getElementById("error-container");
 
-            // 2. LÓGICA DE TÍTULO DINÁMICO
-            if (origen === "compra") {
-                document.getElementById("tituloLogin").textContent = "🛒 Inicia sesión para comprar";
-            }
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                errorDiv.style.display = "none";
 
-            // 3. RELLENAR CAMPOS OCULTOS
-            if (origen) document.getElementById("origen").value = origen;
-            if (idRegreso) document.getElementById("idRegreso").value = idRegreso;
+                const datos = new URLSearchParams(new FormData(form));
 
-            // 4. MOSTRAR ERROR SI EXISTE
-            if (error) {
-                const errorDiv = document.getElementById("error-container");
-                errorDiv.textContent = decodeURIComponent(error);
-                errorDiv.style.display = "block";
-            }
+                try {
+                    const res = await fetch('Login', {
+                        method: 'POST',
+                        body: datos
+                    });
+
+                    if (res.ok) {
+                        const respuesta = await res.json(); 
+                        
+                        // Accedemos directamente al nivel mapeado en el Servlet
+                        const nivel = respuesta.nivel;
+
+                        if (nivel !== undefined && nivel <= 2) {
+                        	window.location.href = "admin?vista=panel";
+                        } else {
+                            window.location.href = "index.html";
+                        }
+                    } else {
+                        errorDiv.textContent = "Usuario o contraseña incorrectos.";
+                        errorDiv.style.display = "block";
+                    }
+                } catch (err) {
+                    errorDiv.textContent = "Error al conectar con el servidor.";
+                    errorDiv.style.display = "block";
+                }
+            });
         });
     </script>
 </body>

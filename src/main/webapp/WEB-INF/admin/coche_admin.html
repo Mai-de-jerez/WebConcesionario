@@ -8,11 +8,22 @@
 </head>
 <body>
 <div class="container">
+
+	<div id="modalConfirmar" class="modal-simple" style="display:none;">
+	    <div class="modal-contenido">
+	        <h3>⚠️ ¿Eliminar vehículo?</h3>
+	        <p>Esta acción no se puede deshacer.</p>
+	        <div class="modal-btns">
+	            <button id="btnConfirmarBorrar" class="btn btn-danger">Sí, borrar</button>
+	            <button onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+	        </div>
+	    </div>
+	</div>
 	
     <div class="header-actions">
         <h1>🚗 Lista de Vehículos</h1>
         <div id="notificacion" class="message" style="display:none"></div>
-        <a href="form-vehiculo.html" class="btn btn-success">➕ Nuevo Vehículo</a>
+        <a href="admin?vista=form-vehiculo" class="btn btn-success">➕ Nuevo Vehículo</a>
     </div>
 	
 	
@@ -47,34 +58,63 @@
             </div>
 
     <div class="nav-buttons">
-        <a href="admin-panel.html" class="btn btn-back">Volver al Panel</a>
+        <a href="admin?vista=panel" class="btn btn-back">Volver al Panel</a>
     </div>
 </div>
 <script src="js/utils.js"></script> 
 <script>
-let estado = {
-	    pagina: 1,
-	    busqueda: ""
-	};
 
+	let estado = {
+	pagina: 1,
+	busqueda: ""
+	};
+	
+	let idSeleccionadoParaBorrar = null;
+	
 	document.addEventListener("DOMContentLoaded", () => {
+		
+	    const estadoGuardado = sessionStorage.getItem("estado_gestion_coches");
+	    if (estadoGuardado) {
+	        const recuperado = JSON.parse(estadoGuardado);
+	        estado.pagina = recuperado.pagina;
+	        estado.busqueda = recuperado.busqueda;
+
+	        document.getElementById("inputBusqueda").value = estado.busqueda;
+	        if(estado.busqueda) {
+	            document.getElementById("btnLimpiar").style.display = "inline-block";
+	        }
+	    }
+	    
 	    cargarCoches();
+
+	    const tabla = document.getElementById("cuerpoTabla");
+	    tabla.addEventListener("click", (e) => {
+	        const link = e.target.closest(".link-borrar");
+	        if (link) {
+	            e.preventDefault(); 
+	            const id = link.getAttribute("data-id");
+	            abrirModalBorrado(id);
+	        }
+	    });
+
+	    document.getElementById("btnConfirmarBorrar").onclick = ejecutarEliminacion;
 
 	    let timer;
 	    document.getElementById("inputBusqueda").addEventListener("input", (e) => {
 	        clearTimeout(timer);
 	        estado.busqueda = e.target.value;
 	        estado.pagina = 1;
-	        
 	        document.getElementById("btnLimpiar").style.display = estado.busqueda ? "inline-block" : "none";
-	        
+	        sessionStorage.setItem("estado_gestion_coches", JSON.stringify(estado));
 	        timer = setTimeout(cargarCoches, 400);
 	    });
 
 	    document.getElementById("btnLimpiar").onclick = () => {
 	        document.getElementById("inputBusqueda").value = "";
 	        estado.busqueda = "";
+	        estado.pagina = 1;
 	        document.getElementById("btnLimpiar").style.display = "none";
+	        sessionStorage.setItem("estado_gestion_coches", JSON.stringify(estado));
 	        cargarCoches();
 	    };
 	});
@@ -100,10 +140,13 @@ let estado = {
 
 	        renderTabla(data.coches);
 	        renderPaginacion(data.totalPaginas);
+	        sessionStorage.setItem("estado_gestion_coches", JSON.stringify(estado));
+	        
 	    } catch (err) {
 	        setError("Error al conectar con el servidor");
 	    }
 	}
+
 
 	function renderTabla(coches) {
 
@@ -118,14 +161,9 @@ let estado = {
 	            <td>${c.color || '-'}</td>
 	            <td>${c.km.toLocaleString()}</td>
 	            <td class="actions">
-	            <a href="detalle_coche_admin.html?id=${c.id}&admin=true" class="row-btn btn-success btn-small">Ver más</a>
-	         
-	                   
-	                <a href="form-vehiculo.html?id=${c.id}" class="row-btn btn-primary btn-small">Editar</a>
-	                
-                    <a href="#" class="row-btn btn-secondary btn-small" 
-                       onclick="event.preventDefault(); if(confirm('¿Estás seguro de querer eliminar este vehículo?')) eliminar(${c.id})">Eliminar</a>
-
+		            <a href="admin?vista=detalle-coche&id=${c.id}" class="row-btn btn-success btn-small">Ver más</a>
+		            <a href="admin?vista=form-vehiculo&id=${c.id}" class="row-btn btn-primary btn-small">Editar</a>
+		            <a href="#" class="row-btn btn-secondary btn-small link-borrar" data-id="${c.id}">Eliminar</a>
 	            </td>
 	        </tr>
 	    `).join("");
@@ -142,7 +180,7 @@ let estado = {
 	    const container = document.querySelector(".paginacion-container");
 	    container.style.display = (total <= 1) ? "none" : "flex";
 
-	    // Actualizamos el texto: "Página 1 de 3"
+	    // Actualizamos el texto de la página
 	    info.textContent = `Página ${estado.pagina} de ${total || 1}`;
 
 	    // Bloqueo de botones
@@ -156,19 +194,37 @@ let estado = {
 
 	function cambiarPagina(n) {
 	    estado.pagina = n;
+	    sessionStorage.setItem("estado_gestion_coches", JSON.stringify(estado));
 	    cargarCoches();
 	}
+	
+	// --- FUNCIONES DEL MODAL ---
+	function abrirModalBorrado(id) {
+	    idSeleccionadoParaBorrar = id;
+	    document.getElementById('modalConfirmar').style.display = 'flex';
+	}
 
-	async function eliminar(id) {
-	    if (!confirm("¿Seguro que quieres borrar este coche?")) return;
-	    
-	    const res = await fetch(`Coche_Sv?accion=eliminar&id=${id}`, { method: 'GET' });
-	    const data = await res.json();
-	    
-	    if (data.resultado === "OK") {
-	        cargarCoches(); 
-	    } else {
-	        mostrarMensaje("No se pudo eliminar el coche", "error");
+	function cerrarModal() {
+	    document.getElementById('modalConfirmar').style.display = 'none';
+	    idSeleccionadoParaBorrar = null;
+	}
+
+	async function ejecutarEliminacion() {
+	    if (!idSeleccionadoParaBorrar) return;
+
+	    try {
+	        const res = await fetch(`Coche_Sv?accion=eliminar&id=${idSeleccionadoParaBorrar}`, { method: 'GET' });
+	        const data = await res.json();
+	        
+	        if (data.resultado === "OK") {
+	            cerrarModal();
+	            mostrarMensaje("Vehículo eliminado correctamente", "success");
+	            cargarCoches(); 
+	        } else {
+	            setError("Error: " + data.mensaje);
+	        }
+	    } catch (err) {
+	        setError("Error de red al intentar eliminar");
 	    }
 	}
 	

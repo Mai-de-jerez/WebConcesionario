@@ -6,9 +6,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import modelo.Coche;
-import dao.CocheDAO; // Importamos el DAO
+import servicio.CocheService;
+import util.ServletUtil;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Servlet de la Tienda de Vehículos
@@ -16,33 +18,35 @@ import java.util.List;
 @WebServlet("/Tienda")
 public class Tienda extends HttpServlet {
     private static final long serialVersionUID = 1L;
-       
-    public Tienda() {
-        super();
-    }
+    private final CocheService cocheService = new CocheService();
+
     
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
+            String accion = request.getParameter("accion");
+            
+            if ("detalle".equals(accion)) {
+                int id = ServletUtil.parsearInt(request.getParameter("id"), "id");
+                Coche coche = cocheService.obtenerCoche(id);
+                ServletUtil.enviarRespuesta(response, coche);
+                return;
+            }
+
             String busqueda = request.getParameter("busqueda");
-            String paginaParam = request.getParameter("pagina");
-            int pagina = (paginaParam != null) ? Integer.parseInt(paginaParam) : 1;
-            int porPagina = 9;
-
-            List<Coche> lista = CocheDAO.getInstance().listarTienda(busqueda, pagina, porPagina);
-            long total = CocheDAO.getInstance().contarTienda(busqueda);
+            int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
+            int porPagina = 8;
+            if (pagina < 1) pagina = 1;
+            List<Coche> lista = cocheService.listarParaTienda(busqueda, pagina, porPagina);
+            long total = cocheService.totalCochesTienda(busqueda);
             int totalPaginas = (int) Math.ceil((double) total / porPagina);
-
-            request.setAttribute("listaCoches", lista);
-            request.setAttribute("busqueda", busqueda);
-            request.setAttribute("paginaActual", pagina);
-            request.setAttribute("totalPaginas", totalPaginas);
-
-            request.getRequestDispatcher("tienda.jsp").forward(request, response);
-
+            Map<String, Object> respuesta = Map.of(
+                "coches", lista,
+                "totalPaginas", totalPaginas,
+                "paginaActual", pagina
+            );
+            ServletUtil.enviarRespuesta(response, respuesta);
         } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "No se han podido cargar los vehículos. Inténtalo de nuevo más tarde.");
-            request.getRequestDispatcher("index.jsp").forward(request, response);
+            ServletUtil.manejarError(response, e);
         }
     }
 

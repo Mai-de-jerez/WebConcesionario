@@ -1,15 +1,53 @@
-// -- MANEJO DE NOTIFICACIONES --
+// utils.js
+// -- MANEJO DE MENSAJES DE EXITO ERROR --
+
+
 function mostrarMensaje(texto, tipo = 'success') {
     const div = document.getElementById('notificacion');
     
     if (div) {
         div.textContent = texto;
-        div.className = `message ${tipo}`; 
+        div.className = `message message-${tipo}`; 
         div.style.display = 'block';
+
+        div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
         setTimeout(() => {
             div.style.display = 'none';
         }, 4000);
     }
+}
+
+// --- MANEJO DE ERRORES ESPECÍFICOS EN CAMPOS ---
+
+function mostrarErrorEnCampo(idCampo, texto) {
+    const campo = document.getElementById(idCampo);
+    const spanError = document.getElementById('error-' + idCampo);
+    if (!campo) return;
+
+    campo.classList.add('input-error');
+    if (spanError) {
+        spanError.textContent = "❌ " + texto;
+    }
+}
+
+function limpiarPantallaErrores() {
+    document.querySelectorAll('.mensaje-error-campo').forEach(span => span.textContent = "");
+    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+}
+
+function configurarLimpiezaErrores(selectorForm) {
+    const form = document.querySelector(selectorForm);
+    if (!form) return;
+
+    const campos = form.querySelectorAll('input, textarea, select');
+    campos.forEach(campo => {
+        campo.addEventListener('input', function() {
+            this.classList.remove('input-error');
+            const spanError = document.getElementById('error-' + this.id);
+            if (spanError) spanError.textContent = "";
+        });
+    });
 }
 
 // -- MANEJO DE ESTADOS DE CARGA, VACÍO Y ERROR --
