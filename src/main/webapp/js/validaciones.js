@@ -2,6 +2,9 @@
 const regexMatricula = /^[0-9]{4}[A-Z]{3}$/;
 const regexTexto = /^[a-zA-ZÀ-ÿ0-9\s\-\.\,\(\)\[\]]{3,100}$/;
 const regexPrecio = /^\d+(\.\d{1,2})?$/;
+const esTextoValido = (texto) => /^[a-zA-ZÀ-ÿ0-9@\s\-\.\,\:\;\!\?\(\)\'\"]{3,100}$/.test(texto.trim());
+const esEmailValido = (email) => /^[\w.-]+@[\w.-]+\.[a-z]{2,8}$/.test(email.trim());
+const esPasswordSegura = (pass) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/.test(pass);
 
 // --- VALIDACIÓN DE ARCHIVOS  ---
 const validarArchivoFoto = (elInput) => {
@@ -127,4 +130,136 @@ function validarFormularioCoche() {
     }
 
     return esValido;
+}
+
+
+function validarFormularioUsuarios() {
+    limpiarPantallaErrores();
+    let esValido = true;
+
+	const elNombre = document.getElementById('nombre');
+	const elApellidos = document.getElementById('apellidos');
+    const elUsuario = document.getElementById('usuario');
+    const elEmail = document.getElementById('email');
+    const elPassword = document.getElementById('password');
+    const elRol = document.getElementById('rol');
+	const elTelefono = document.getElementById('telefono');
+	const elDireccion = document.getElementById('direccion');
+    const elFoto = document.getElementById('foto');
+    const accion = document.getElementById('accion-form').value;
+
+	// Nombre
+	if (!esTextoValido(elNombre.value)) {
+	    mostrarErrorEnCampo('nombre', "Nombre obligatorio (3-100 caracteres)");
+	    if (esValido) elNombre.focus();
+	    esValido = false;
+	}
+
+	// Apellidos
+	if (!esTextoValido(elApellidos.value)) {
+	    mostrarErrorEnCampo('apellidos', "Apellidos obligatorios (3-100 caracteres)");
+	    if (esValido) elApellidos.focus();
+	    esValido = false;
+	}
+
+    // Usuario
+    const errorUsuario = validarNombre(elUsuario);
+    if (errorUsuario) {
+        mostrarErrorEnCampo('usuario', errorUsuario);
+        if (esValido) elUsuario.focus();
+        esValido = false;
+    }
+
+    // Email
+    const errorEmail = validarEmail(elEmail);
+    if (errorEmail) {
+        mostrarErrorEnCampo('email', errorEmail);
+        if (esValido) elEmail.focus();
+        esValido = false;
+    }
+
+    // Password
+    if (accion === 'alta' || elPassword.value.length > 0) {
+        const errorPass = validarPassword(elPassword);
+        if (errorPass) {
+            mostrarErrorEnCampo('password', errorPass);
+            if (esValido) elPassword.focus();
+            esValido = false;
+        }
+    }
+
+    // Rol
+    if (!elRol.value || elRol.value === "") {
+        mostrarErrorEnCampo('rol', "Selecciona un rol");
+        if (esValido) elRol.focus();
+        esValido = false;
+    }
+	
+
+	// Teléfono
+	if (!/^[67]\d{8}$/.test(elTelefono.value.trim())) {
+	    mostrarErrorEnCampo('telefono', "Teléfono obligatorio (9 dígitos, empieza por 6 o 7)");
+	    if (esValido) elTelefono.focus();
+	    esValido = false;
+	}
+
+	// Dirección
+	if (elDireccion.value.trim().length < 5) {
+	    mostrarErrorEnCampo('direccion', "Dirección obligatoria (mín. 5 caracteres)");
+	    if (esValido) elDireccion.focus();
+	    esValido = false;
+	}
+
+    // Foto
+    const checkFoto = validarArchivoFoto(elFoto);
+    if (!checkFoto.valido) {
+        mostrarErrorEnCampo('foto', checkFoto.msg);
+        if (esValido) elFoto.focus();
+        esValido = false;
+    }
+
+    return esValido;
+}
+
+
+
+// --- FUNCIONES AUXILIARES ---
+function validarNombre(input) {
+    const valor = input.value.trim();
+
+    if (valor.length < 3 || valor.length > 100) {
+        input.classList.add('input-error');
+        return "El nombre debe tener entre 3 y 100 caracteres.";
+    }
+
+    if (!esTextoValido(valor)) {
+        input.classList.add('input-error');
+        return "Has introducido caracteres especiales no aceptados.";
+    }
+
+    return "";
+}
+
+function validarEmail(input) {
+    if (!esEmailValido(input.value)) {
+        input.classList.add('input-error');
+        return "Formato de email no válido.";
+    }
+    return "";
+}
+
+function validarPassword(input) {
+    if (!esPasswordSegura(input.value)) {
+        input.classList.add('input-error');
+        return "Mínimo 6 caracteres, una mayúscula y un número.";
+    }
+    return "";
+}
+
+function validarConfirmPassword(pass, confirm) {
+    if (pass.value !== confirm.value || confirm.value === "") {
+        confirm.classList.add('input-error');
+        return "Las contraseñas no coinciden.";
+    }
+    return "";
 }

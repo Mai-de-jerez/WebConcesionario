@@ -62,7 +62,7 @@
     </div>
 </div>
 <script src="js/utils.js"></script> 
-<script>
+<script type="text/javascript">
 
 	let estado = {
 	pagina: 1,
@@ -228,6 +228,9 @@
 	    }
 	}
 	
+	document.querySelector('a[href="admin?vista=panel"]').addEventListener("click", () => {
+	    sessionStorage.removeItem("estado_gestion_coches");
+	});
 </script>
 </body>
 </html>

@@ -59,7 +59,7 @@
 </div>
 
 <script src="js/utils.js"></script>
-<script>
+<script type="text/javascript">
     let estado = { pagina: 1, busqueda: "" };
     let idSeleccionadoParaBorrar = null;
     let nivelAdmin = null;
@@ -218,6 +218,9 @@
             setError("Error de red al intentar eliminar");
         }
     }
+    document.querySelector('a[href="admin?vista=panel"]').addEventListener("click", () => {
+        sessionStorage.removeItem("estado_gestion_usuarios");
+    });
 </script>
 </body>
 </html>
