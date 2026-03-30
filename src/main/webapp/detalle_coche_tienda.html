@@ -16,12 +16,14 @@
 	    <div class="nav-right" id="nav-sesion">
 	        </div>        
 	</nav>	
+	
     <main class="content-area">
         <div class="container" style="max-width: 900px;">
+        	<div id="notificacion" class="message" style="display:none"></div>
             <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: start;">
                 <div style="flex: 1; min-width: 300px;">
-                    <div class="feature-card" style="padding: 10px;">
-                        <img id="img-coche" src="img/sin-foto.png" style="width:100%; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-height: 200px; object-fit: cover;">
+                    <div class="feature-card">
+                        <img id="img-coche" src="img/sin-foto.png">
                     </div>
                 </div>
                 <div style="flex: 1.2; min-width: 300px;">
@@ -47,26 +49,40 @@
                         </table>
                     </div>
                     <div class="form-buttons" style="margin-top: 25px; gap: 10px; display: flex;">
-                        <a id="link-carrito" href="#" class="btn btn-success">🛒 Añadir a la cesta</a>
-                        <a href="tienda.html" class="btn btn-back">Volver a la Tienda</a>
+                        <a id="link-carrito" href="#" class="btn btn-success">🛒 Reservar</a>
+                        <a href="tienda.html" class="btn btn-back">Volver</a>
                     </div>                                 
                 </div>
             </div>
         </div>
     </main>
+    
     <script src="js/nav-session.js"></script>
+    <script src="js/utils.js"></script>
 	<script>
 		document.addEventListener("DOMContentLoaded", async () => {
 		    const params = new URLSearchParams(window.location.search);
+		    const enlaceVolver = document.querySelector(".btn-back");
+	        
+	        if (enlaceVolver) {
+	            enlaceVolver.addEventListener("click", (e) => {
+	       
+	                if (window.history.length > 1) {
+	                    e.preventDefault(); 
+	                    window.history.back();
+	                }
+	    
+	            });
+	        }
+	        
 		    const id = params.get("id");
 		    if (!id) return;
 	
 		    try {
-		        // 1. CARGAMOS LOS DATOS DEL COCHE
-		        const resCoche = await fetch(`Tienda?accion=detalle&id=${id}`);
+	
+		        const resCoche = await fetch(`Tienda_Sv?accion=detalle&id=${id}`);
 		        const c = await resCoche.json();
 	
-		        // Rellenamos la tabla (Marca, Modelo, Precio, etc.)
 		        document.getElementById("img-coche").src = `img/${c.imagen || 'sin-foto.png'}`;
 		        document.getElementById("marca-txt").textContent = c.marca;
 		        document.getElementById("modelo-txt").textContent = c.modelo;
@@ -84,26 +100,12 @@
 	
 		        const btnAccion = document.getElementById("link-carrito");
 		
-		        const resUser = await fetch('Login');
-	
-		        if (resUser.ok) {
-		
-		            const usuario = await resUser.json();
-		            btnAccion.textContent = "🛒 Añadir a la cesta";
-		            btnAccion.className = "btn btn-success";
-		            btnAccion.href = `Carrito?idCoche=${c.id}&precioCoche=${c.precio}`;
-		        } else {
-	
-		            btnAccion.textContent = "Comprar";
-		            btnAccion.className = "btn btn-secondary";
-	
-		            btnAccion.href = `login.jsp?origen=compra&idRegreso=${c.id}`;
-		        }
+		        btnAccion.textContent = "🛒 Reservar";
+		        btnAccion.className = "btn btn-success"; 
+		        btnAccion.href = `Tienda_Sv?accion=checkout&idCoche=${c.id}`;
 	
 		    } catch (error) {
-		        console.error("Error en la carga:", error);
-		        document.getElementById("link-carrito").textContent = "Comprar";
-		        document.getElementById("link-carrito").href = "login.jsp";
+		    	setError("Error al cargar los datos del vehículo");
 		    }
 		});
 	</script>

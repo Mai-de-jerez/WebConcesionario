@@ -12,8 +12,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
   </properties>
-  
-  
+   
   <dependencies>
     <dependency>
         <groupId>com.mysql</groupId>
@@ -31,7 +30,19 @@
 	    <artifactId>hibernate-core</artifactId>
 	    <version>6.4.4.Final</version>
 	</dependency>
+		
+	<dependency>
+	    <groupId>com.zaxxer</groupId>
+	    <artifactId>HikariCP</artifactId>
+	    <version>5.1.0</version>
+	</dependency>
 	
+	<dependency>
+	    <groupId>org.hibernate.orm</groupId>
+	    <artifactId>hibernate-hikaricp</artifactId>
+	    <version>6.4.4.Final</version> 
+	</dependency>
+		
 	<dependency>
 	    <groupId>jakarta.persistence</groupId>
 	    <artifactId>jakarta.persistence-api</artifactId>

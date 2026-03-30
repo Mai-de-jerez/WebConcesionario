@@ -30,10 +30,11 @@ public class LoginServlet extends HttpServlet {
         if (u != null) {
       
             Map<String, Object> respuestaJS = new HashMap<>();
-            respuestaJS.put("nombre", u.getNombre());
-            respuestaJS.put("usuario", u.getUsuario());
-            respuestaJS.put("nivel", u.getRol().getNivel());
+            
             respuestaJS.put("id_usuario", u.getId_usuario());
+            respuestaJS.put("usuario", u.getUsuario());
+            respuestaJS.put("nombre", u.getNombre());   
+            respuestaJS.put("nivel", u.getRol().getNivel());
 
             ServletUtil.enviarRespuesta(response, respuestaJS);
         } else {
@@ -56,10 +57,12 @@ public class LoginServlet extends HttpServlet {
                 sesion.setAttribute("usuarioLogueado", u);
 
                 Map<String, Object> respuestaJS = new HashMap<>();
-                respuestaJS.put("nombre", u.getNombre());
-                respuestaJS.put("usuario", u.getUsuario());
-                respuestaJS.put("nivel", u.getRol().getNivel()); 
+                
                 respuestaJS.put("id_usuario", u.getId_usuario());
+                respuestaJS.put("usuario", u.getUsuario());
+                respuestaJS.put("nombre", u.getNombre());   
+                respuestaJS.put("nivel", u.getRol().getNivel());
+
 
                 System.out.println("✅ Login exitoso para: " + u.getUsuario() + " (Nivel: " + u.getRol().getNivel() + ")");
                 

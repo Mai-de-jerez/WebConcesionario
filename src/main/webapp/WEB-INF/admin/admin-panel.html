@@ -25,7 +25,7 @@
                 <h3>👤 Gestión de usuarios</h3>
                 <p>Administra usuarios de tu sitio web de manera eficiente.</p>
             </div>
-            <div class="feature-card" onclick="location.href='gestion-pedidos.html'">
+            <div class="feature-card" onclick="location.href='admin?vista=pedidos'">
                 <h3>📦 Gestión de Pedidos</h3>
                 <p>Administra pedidos de manera eficiente.</p>
             </div>
@@ -36,6 +36,34 @@
             <a href="index.html" class="btn btn-back">Volver al Inicio</a>
         </div>      
     </div>
+    <script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", async () => {
+        const rolSpan = document.getElementById("rol-usuario");
 
+        try {
+            const res = await fetch('Login', {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (res.ok) {
+                const datos = await res.json();
+               
+                const roles = {
+                    1: "Superuser nivel 1",
+                    2: "Gestor nivel 2",
+                    3: "Usuario nivel 3"
+                };
+
+                rolSpan.textContent = roles[datos.nivel] || "Desconocido";
+
+            } else {
+                window.location.href = "login.html";
+            }
+        } catch (err) {
+            console.error("Error al recuperar el nivel:", err);
+            rolSpan.textContent = "Error";
+        }
+    });
+</script>
 </body>
 </html>

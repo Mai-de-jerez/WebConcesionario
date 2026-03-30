@@ -25,7 +25,7 @@ import servicio.CocheService;
 )
 public class Coche_Sv extends HttpServlet {
 
-    private final CocheService cocheService = new CocheService();
+    private final CocheService cocheService = CocheService.getInstance();
     private static final long serialVersionUID = 1L;
     private static final String PATH_IMAGENES = "C:\\Users\\carme\\Proyectos_Java\\WebConcesionario\\src\\main\\webapp\\img";
     private static final String IMG_DEFECTO = "sin-foto.png";
@@ -151,7 +151,7 @@ public class Coche_Sv extends HttpServlet {
                 c.setImagen(imagenActual);
             }
 
-            cocheService.guardarCoche(c);
+            cocheService.guardarCoche(c); 
 
             if (nombreImagenNueva != null && imagenActual != null && !imagenActual.equals(IMG_DEFECTO)) {
                 ImagenUtil.borrarArchivo(imagenActual, PATH_IMAGENES, IMG_DEFECTO);
@@ -163,6 +163,8 @@ public class Coche_Sv extends HttpServlet {
             ServletUtil.manejarError(response, e);
         }
     }
+    
+
 
     private void ejecutarEliminar(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {

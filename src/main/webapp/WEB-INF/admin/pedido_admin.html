@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pedidos-Reservas - Concesionario May</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+
+	
+    <div class="header-actions">
+        <h1>🚗 Lista de Reservas-Pedidos</h1>
+        <div id="notificacion" class="message" style="display:none"></div>
+        <a href="admin?vista=form-pedido" class="btn btn-success">➕ Nueva Reserva</a>
+    </div>
+	
+	
+    <div class="search-form">
+        <input type="text" id="inputBusqueda" placeholder="id, estado, email del cliente...">
+        <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>                   
+                    <th>Fecha Reserva</th>
+                    <th>Fecha Expiración</th>
+                    <th>Estado del Pedido</th>
+                    <th>ID Coche</th>
+                    <th>ID Ususario</th>
+                    <th>Email del Cliente</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="paginacion-container">
+                <button type="button" id="pag-anterior" class="btn-ver">Anterior</button>
+                <span id="num-pagina">Página 1</span>
+                <button type="button" id="pag-siguiente" class="btn-ver">Siguiente</button>
+            </div>
+
+    <div class="nav-buttons">
+        <a href="admin?vista=panel" class="btn btn-back">Volver al Panel</a>
+    </div>
+</div>
+<script src="js/utils.js"></script> 
+<script type="text/javascript">
+	let estado = { pagina: 1, busqueda: "" };
+	
+	document.addEventListener("DOMContentLoaded", () => {
+
+	    const estadoGuardado = sessionStorage.getItem("estado_gestion_pedidos");
+	    if (estadoGuardado) {
+	        const recuperado = JSON.parse(estadoGuardado);
+	        estado.pagina = recuperado.pagina;
+	        estado.busqueda = recuperado.busqueda;
+	        document.getElementById("inputBusqueda").value = estado.busqueda;
+	    }
+	    
+	    cargarPedidos();
+	
+	    let timer;
+	    document.getElementById("inputBusqueda").addEventListener("input", (e) => {
+	        clearTimeout(timer);
+	        estado.busqueda = e.target.value;
+	        estado.pagina = 1;
+	        sessionStorage.setItem("estado_gestion_pedidos", JSON.stringify(estado));
+	        timer = setTimeout(cargarPedidos, 400);
+	    });
+
+	    document.getElementById("btnLimpiar").onclick = () => {
+	        document.getElementById("inputBusqueda").value = "";
+	        estado.busqueda = "";
+	        estado.pagina = 1;
+	        sessionStorage.setItem("estado_gestion_pedidos", JSON.stringify(estado));
+	        cargarPedidos();
+	    };
+	});
+	
+	async function cargarPedidos() {
+	    setLoading(8); 
+	    try {
+	
+	        const res = await fetch(`Pedido_Sv?accion=listar&pagina=${estado.pagina}&busqueda=${encodeURIComponent(estado.busqueda)}`);
+	   
+	        if (res.status === 401 || res.status === 403) {
+	            window.location.href = "login.html";
+	            return;
+	        }
+	
+	        const data = await res.json();
+	
+	        if (!data.pedidos || data.pedidos.length === 0) {
+	            setVacio("No hay pedidos registrados con ese filtro", 8); 
+	            renderPaginacion(0);
+	            return;
+	        }
+	
+	        renderTabla(data.pedidos);
+	        renderPaginacion(data.totalPaginas);
+	        sessionStorage.setItem("estado_gestion_pedidos", JSON.stringify(estado));
+	        
+	    } catch (err) {
+	        setError("Error al conectar con el servidor de pedidos");
+	    }
+	}
+	
+	function renderTabla(pedidos) {
+	    const tbody = document.getElementById("cuerpoTabla");
+	    tbody.innerHTML = pedidos.map(p => {
+
+	        let claseEstado = "color: #ffc107;"; 
+	        if (p.estado === 'COMPLETADO') claseEstado = "color: #28a745;"; 
+	        if (p.estado === 'CANCELADO') claseEstado = "color: #dc3545;"; 
+
+	        const fReserva = p.fechaReserva ? p.fechaReserva.replace("T", " ").substring(0, 16) : "-";
+	        const fExpira = p.fechaExpiracion ? p.fechaExpiracion.replace("T", " ").substring(0, 16) : "-";
+	
+	        return `
+	            <tr>
+	                <td style="font-weight: bold; color: #764ba2;">#${p.id}</td>
+	                <td>${fReserva}</td>
+	                <td>${fExpira}</td>
+	                <td style="${claseEstado} font-weight: bold;">${p.estado}</td>
+	                <td>${p.coche.id}</td>
+	                <td>${p.usuario.id_usuario}</td>
+	                <td>${p.emailContacto}</td>
+	                <td class="actions">
+	                    <a href="admin?vista=detalle-pedido&id=${p.id}" class="row-btn btn-success btn-small">Ver Detalle</a>
+	                </td>
+	            </tr>
+	        `;
+	    }).join("");
+	}
+	
+	function renderPaginacion(total) {
+	    const btnAnt = document.getElementById("pag-anterior");
+	    const btnSig = document.getElementById("pag-siguiente");
+	    const info = document.getElementById("num-pagina");
+	
+	    if (!info || !btnAnt || !btnSig) return;
+	
+	    const container = document.querySelector(".paginacion-container");
+	    container.style.display = (total <= 1) ? "none" : "flex";
+	    
+	    info.textContent = `Página ${estado.pagina} de ${total || 1}`;
+	    btnAnt.disabled = (estado.pagina <= 1);
+	    btnSig.disabled = (estado.pagina >= total || total === 0);
+	
+	    btnAnt.onclick = () => { if(estado.pagina > 1) cambiarPagina(estado.pagina - 1); };
+	    btnSig.onclick = () => { if(estado.pagina < total) cambiarPagina(estado.pagina + 1); };
+	}
+	
+	function cambiarPagina(n) {
+	    estado.pagina = n;
+	    sessionStorage.setItem("estado_gestion_pedidos", JSON.stringify(estado));
+	    cargarPedidos();
+	}
+
+	document.querySelector('a[href="admin?vista=panel"]').onclick = () => {
+	    sessionStorage.removeItem("estado_gestion_pedidos");
+	};	
+</script>
+</body>
+</html>

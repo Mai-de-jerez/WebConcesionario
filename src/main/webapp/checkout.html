@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Concesionario May</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-body">
+    <nav class="navbar">
+	    <div class="nav-left">
+	        <a href="index.html" class="nav-link">Inicio</a>
+	        <a href="tienda.html" class="nav-link">Tienda</a>
+	        <a href="sobre-nosotros.html" class="nav-link">Sobre Nosotros</a>
+	        <a href="contacto.html" class="nav-link">Contacto</a>
+	    </div>
+	    <div class="nav-right" id="nav-sesion">
+	        </div>        
+	</nav>
+
+    <main class="content-area">
+        <div class="container" style="max-width: 700px;">
+
+            <h1>💳 Confirmar Reserva y Pago</h1>
+
+            <div id="notificacion" style="display:none;"></div>
+
+            <!-- Resumen del vehículo -->
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #764ba2;">
+                <h2 style="margin: 0 0 10px 0; color: #764ba2;">🚗 Vehículo seleccionado</h2>
+                <p id="info-coche" style="margin: 0; font-size: 1.1em;">Cargando...</p>
+                <p style="margin: 10px 0 0 0;">
+                    <strong>Señal a abonar: </strong>
+                    <span style="font-size: 1.3em; font-weight: bold; color: #764ba2;">500,00 €</span>
+                </p>
+            </div>
+
+            <!-- Datos del cliente -->
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #ccc;">
+                <h3 style="margin: 0 0 10px 0;">👤 Tus datos</h3>
+                <p id="info-cliente" style="margin: 0;">Cargando...</p>
+            </div>
+
+            <!-- Método de pago -->
+            <div class="form-group">
+                <label for="metodoPago"><strong>💳 Método de pago *</strong></label>
+                <select id="metodoPago">
+                    <option value="">-- Selecciona --</option>
+                    <option value="tarjeta">Tarjeta de crédito/débito</option>
+                    <option value="bizum">Bizum</option>
+                    <option value="paypal">PayPal</option>
+                </select>
+                <span id="error-metodoPago" class="mensaje-error-campo"></span>
+            </div>
+
+            <!-- Formulario Tarjeta -->
+            <div id="form-tarjeta" class="form-pago form-grid" style="display:none;">
+                <div class="form-group">
+                    <label for="numTarjeta">Número de tarjeta *</label>
+                    <input type="text" id="numTarjeta" placeholder="1234-5678-9012-3456">
+                    <span id="error-numTarjeta" class="mensaje-error-campo"></span>
+                </div>
+                <div class="form-group">
+                    <label for="caducidad">Caducidad (MM/YY) *</label>
+                    <input type="text" id="caducidad" placeholder="08/26">
+                    <span id="error-caducidad" class="mensaje-error-campo"></span>
+                </div>
+                <div class="form-group">
+                    <label for="cvv">CVV *</label>
+                    <input type="text" id="cvv" placeholder="123" maxlength="3">
+                    <span id="error-cvv" class="mensaje-error-campo"></span>
+                </div>
+            </div>
+
+            <!-- Formulario Bizum -->
+            <div id="form-bizum" class="form-pago form-grid" style="display:none;">
+                <div class="form-group">
+                    <label for="telefonoBizum">Teléfono Bizum *</label>
+                    <input type="text" id="telefonoBizum" placeholder="600000000" maxlength="9">
+                    <span id="error-telefonoBizum" class="mensaje-error-campo"></span>
+                </div>
+            </div>
+
+            <!-- Formulario PayPal -->
+            <div id="form-paypal" class="form-pago form-grid" style="display:none;">
+                <div class="form-group">
+                    <label for="emailPaypal">Email de PayPal *</label>
+                    <input type="email" id="emailPaypal" placeholder="tucuenta@paypal.com">
+                    <span id="error-emailPaypal" class="mensaje-error-campo"></span>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="form-buttons" style="margin-top: 30px;">
+                <a href="tienda.html" class="btn btn-back">⬅️ Volver</a>
+                <a href="#" id="btn-confirmar" class="btn btn-success">✅ Confirmar Reserva</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Concesionario May. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="js/utils.js"></script>
+    <script src="js/nav-session.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const idCoche = params.get("idCoche");
+
+        document.addEventListener("DOMContentLoaded", async () => {
+
+            // Redirigir si no hay idCoche
+            if (!idCoche) {
+                window.location.href = "tienda.html";
+                return;
+            }
+
+            // Cargar datos del coche y del usuario en paralelo
+            const [resCoche, resUser] = await Promise.all([
+                fetch(`Tienda_Sv?accion=detalle&id=${idCoche}`),
+                fetch("Cliente_Sv?accion=perfil")
+            ]);
+
+            const coche = await resCoche.json();
+            const usuario = await resUser.json();
+
+            // Si no está logueado, redirigir al login
+            if (!usuario || usuario.resultado === "ERROR") {
+                window.location.href = `login.html?idRegreso=${idCoche}`;
+                return;
+            }
+
+            // Rellenar info coche
+            document.getElementById("info-coche").textContent =
+                `${coche.marca} ${coche.modelo} — ${coche.precio.toLocaleString()} € — ${coche.tipoMotor} | ${coche.km.toLocaleString()} km`;
+
+            // Rellenar info cliente
+            document.getElementById("info-cliente").innerHTML =
+                `<strong>${usuario.nombre} ${usuario.apellidos}</strong><br>
+                 📧 ${usuario.email}<br>
+                 📞 ${usuario.telefono || "No facilitado"}<br>
+                 📍 ${usuario.direccion || "No facilitada"}`;
+
+            // Cambio de método de pago — delegación de eventos
+            document.getElementById("metodoPago").addEventListener("change", function () {
+                document.querySelectorAll(".form-pago").forEach(f => f.style.display = "none");
+                if (this.value) document.getElementById(`form-${this.value}`).style.display = "block";
+            });
+
+            // Confirmar reserva — delegación de eventos
+            document.getElementById("btn-confirmar").addEventListener("click", async (e) => {
+                e.preventDefault();
+                limpiarPantallaErrores();
+
+                const metodo = document.getElementById("metodoPago").value;
+                if (!metodo) {
+                    mostrarErrorEnCampo("metodoPago", "Selecciona un método de pago.");
+                    return;
+                }
+
+                try {
+                    const res = await fetch("Tienda_Sv", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `accion=reservar&idCoche=${idCoche}&importeSenal=500`
+                    });
+                    const data = await res.json();
+
+                    if (data.resultado === "OK") {
+                        window.location.href = "Tienda_Sv?accion=confirmacion";
+                    } else {
+                        mostrarMensaje(data.mensaje, "error");
+                    }
+                } catch (e) {
+                    mostrarMensaje("Error inesperado. Inténtalo de nuevo.", "error");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

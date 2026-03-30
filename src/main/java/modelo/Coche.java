@@ -9,12 +9,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;// Importante: usamos jakarta
+import jakarta.persistence.EnumType;
 import java.io.Serializable;
 import java.util.List;
+import jakarta.persistence.Index;
+
 
 @Entity
-@Table(name = "coche") 
+@Table(name = "coche", indexes = {
+    @Index(name = "idx_coche_estado", columnList = "estado")
+})
 public class Coche implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -47,10 +51,9 @@ public class Coche implements Serializable {
     @Column(columnDefinition = "TEXT") 
     private String descripcion;
 
-
-    // Relación con reservas
+    
     @OneToMany(mappedBy = "coche", cascade = CascadeType.ALL, orphanRemoval = true)
-    private transient List<Reserva> reservas;
+    private transient List<ReservaPedido> reservasPedido;
     
     // CONSTRUCTOR VACÍO: Obligatorio para JPA
     public Coche() {
@@ -278,9 +281,10 @@ public class Coche implements Serializable {
 	public void setDescripcion(String descripcion) {
 		this.descripcion = descripcion;
 	}
-	
-	public List<Reserva> getReservas() { return reservas; }
-    public void setReservas(List<Reserva> reservas) { this.reservas = reservas; } 
+    
+    
+    public List<ReservaPedido> getReservasPedido() { return reservasPedido; }
+    public void setReservasPedido(List<ReservaPedido> reservasPedido) { this.reservasPedido = reservasPedido; }
 	
 	// Métodos personales
 	

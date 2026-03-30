@@ -24,10 +24,21 @@
     <main class="content-area">
         <div class="container">
             <h1>🚗 Unidades Disponibles</h1>
-
+			<div id="notificacion" class="message" style="display:none"></div>
+			<div class="search-form">
+                <input type="text" id="inputBusqueda" placeholder="Marca, modelo...">
+                <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
+            </div>
             
             <div class="feature-cards-shop" id="contenedor-coches">
                 <p>Cargando vehículos...</p>
+            </div>
+            
+            
+            <div class="paginacion-container" style="display:none;">
+                <button type="button" id="pag-anterior" class="btn-ver">Anterior</button>
+                <span id="num-pagina">Página 1</span>
+                <button type="button" id="pag-siguiente" class="btn-ver">Siguiente</button>
             </div>
         </div>
     </main>
@@ -35,68 +46,107 @@
     <footer class="main-footer">
         <p>&copy; 2026 Concesionario May. Todos los derechos reservados.</p>
     </footer>
-	<script src="js/nav-session.js"></script>
-
+	<script src="js/nav-session.js"></script> 
+	<script src="js/utils.js"></script>  
     <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", () => {
+
+        let estado = { pagina: 1, busqueda: "" };
+        let usuarioActual = null;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+
+            const resUser = await fetch('Login');
+            usuarioActual = resUser.ok ? await resUser.json() : null;
+            const estadoGuardado = sessionStorage.getItem("estado_tienda");
+            
+            if (estadoGuardado) {
+                const recuperado = JSON.parse(estadoGuardado);
+                estado.pagina = recuperado.pagina;
+                estado.busqueda = recuperado.busqueda;
+                document.getElementById("inputBusqueda").value = estado.busqueda;
+            }
+            
             cargarTienda();
+
+            let timer;
+            document.getElementById("inputBusqueda").addEventListener("input", (e) => {
+                clearTimeout(timer);
+                estado.busqueda = e.target.value;
+                estado.pagina = 1;
+                sessionStorage.setItem("estado_tienda", JSON.stringify(estado));
+                timer = setTimeout(cargarTienda, 400);
+            });
+
+            document.getElementById("btnLimpiar").addEventListener("click", () => {
+                document.getElementById("inputBusqueda").value = "";
+                estado.busqueda = "";
+                estado.pagina = 1;
+                cargarTienda();
+            });
         });
 
         async function cargarTienda() {
             try {
-                // Solo necesitamos saber si hay alguien para el botón de compra
-                const resUser = await fetch('Login');
-                const usuario = resUser.ok ? await resUser.json() : null;
+                const res = await fetch(`Tienda_Sv?accion=listar&busqueda=${encodeURIComponent(estado.busqueda)}&pagina=${estado.pagina}`);
+                const data = await res.json();
 
-                // Cargamos los coches
-                const resCoches = await fetch('Tienda');
-                const data = await resCoches.json();
-                
-                renderCoches(data.coches, usuario);
+                if (!data.coches || data.coches.length === 0) {
+                    document.getElementById("contenedor-coches").innerHTML = "<p>No hay vehículos disponibles.</p>";
+                    renderPaginacion(0);
+                    return;
+                }
+
+                renderCoches(data.coches);
+                renderPaginacion(data.totalPaginas);
+                sessionStorage.setItem("estado_tienda", JSON.stringify(estado));
 
             } catch (error) {
-                console.error("Error cargando la tienda", error);
-                document.getElementById("contenedor-coches").innerHTML = "<p>Error al conectar con el servidor.</p>";
+                setError("Error al conectar con el servidor");
             }
         }
 
-        function renderCoches(coches, usu) {
+        function renderCoches(coches) {
             const contenedor = document.getElementById("contenedor-coches");
-            
-            if (!coches || coches.length === 0) {
-                contenedor.innerHTML = "<p>No hay vehículos disponibles en este momento.</p>";
-                return;
-            }
 
             contenedor.innerHTML = coches.map(c => {
-       
-                const foto = c.imagen || c.foto || "sin-foto.png";
-    
-                let botonCompra = "";
-                if (!usu || usu.resultado === "ERROR") {
-                    botonCompra = `<a href="login.html?idRegreso=${c.id}" class="btn btn-secondary btn-small">🛒 Login para comprar</a>`;
-                } else {
-                    botonCompra = `<a href="Carrito?idCoche=${c.id}&precioCoche=${c.precio}" class="btn btn-success btn-small">🛒 Comprar</a>`;
-                }
+                const foto = c.imagen || "sin-foto.png";
 
                 return `
                     <div class="feature-card">
-                        <img src="img/${foto}" alt="${c.modelo}" style="width:100%; border-radius:10px; height:180px; object-fit:cover; margin-bottom:15px;">                 
+                        <img src="img/${foto}" alt="${c.modelo}" style="width:100%; border-radius:10px; height:180px; object-fit:cover; margin-bottom:15px;">
                         <h3>${c.marca} ${c.modelo}</h3>
                         <p>${c.tipoMotor} | ${c.km.toLocaleString()} km</p>
                         <p style="font-weight: bold; color: #764ba2; font-size: 1.3em; margin: 10px 0;">
                             ${c.precio.toLocaleString()} €
                         </p>
-                        
-                        
                         <div class="actions" style="display: flex; flex-direction: column; gap: 10px;">
                             <a href="detalle_coche_tienda.html?id=${c.id}" class="btn btn-secondary btn-small">Ver más</a>
-                            ${botonCompra}
+                            <a href="Tienda_Sv?accion=checkout&idCoche=${c.id}" class="btn btn-success btn-small">🛒 Reservar</a>
                         </div>
                     </div>
                 `;
             }).join("");
-  
+        }
+
+        function renderPaginacion(total) {
+            const btnAnt = document.getElementById("pag-anterior");
+            const btnSig = document.getElementById("pag-siguiente");
+            const info = document.getElementById("num-pagina");
+            const container = document.querySelector(".paginacion-container");
+
+            container.style.display = (total <= 1) ? "none" : "flex";
+            info.textContent = `Página ${estado.pagina} de ${total || 1}`;
+            btnAnt.disabled = (estado.pagina <= 1);
+            btnSig.disabled = (estado.pagina >= total || total === 0);
+
+            btnAnt.onclick = () => { if (estado.pagina > 1) cambiarPagina(estado.pagina - 1); };
+            btnSig.onclick = () => { if (estado.pagina < total) cambiarPagina(estado.pagina + 1); };
+        }
+
+        function cambiarPagina(n) {
+            estado.pagina = n;
+            sessionStorage.setItem("estado_tienda", JSON.stringify(estado));
+            cargarTienda();
         }
     </script>
 </body>

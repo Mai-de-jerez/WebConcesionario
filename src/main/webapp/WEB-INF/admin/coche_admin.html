@@ -29,7 +29,7 @@
 	
     <div class="search-form">
         <input type="text" id="inputBusqueda" placeholder="Marca, modelo, matrícula...">
-        <button id="btnLimpiar" class="btn btn-secondary" style="display:none">Limpiar</button>
+        <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
     </div>
 
     <div class="table-container">
@@ -64,11 +64,7 @@
 <script src="js/utils.js"></script> 
 <script type="text/javascript">
 
-	let estado = {
-	pagina: 1,
-	busqueda: ""
-	};
-	
+	let estado = {pagina: 1, busqueda: ""};	
 	let idSeleccionadoParaBorrar = null;
 	
 	document.addEventListener("DOMContentLoaded", () => {
@@ -80,9 +76,6 @@
 	        estado.busqueda = recuperado.busqueda;
 
 	        document.getElementById("inputBusqueda").value = estado.busqueda;
-	        if(estado.busqueda) {
-	            document.getElementById("btnLimpiar").style.display = "inline-block";
-	        }
 	    }
 	    
 	    cargarCoches();
@@ -104,7 +97,6 @@
 	        clearTimeout(timer);
 	        estado.busqueda = e.target.value;
 	        estado.pagina = 1;
-	        document.getElementById("btnLimpiar").style.display = estado.busqueda ? "inline-block" : "none";
 	        sessionStorage.setItem("estado_gestion_coches", JSON.stringify(estado));
 	        timer = setTimeout(cargarCoches, 400);
 	    });
@@ -113,7 +105,6 @@
 	        document.getElementById("inputBusqueda").value = "";
 	        estado.busqueda = "";
 	        estado.pagina = 1;
-	        document.getElementById("btnLimpiar").style.display = "none";
 	        sessionStorage.setItem("estado_gestion_coches", JSON.stringify(estado));
 	        cargarCoches();
 	    };
@@ -176,18 +167,11 @@
 
 	    if (!info || !btnAnt || !btnSig) return;
 
-	    // Si solo hay una página, ocultamos el contenedor
 	    const container = document.querySelector(".paginacion-container");
 	    container.style.display = (total <= 1) ? "none" : "flex";
-
-	    // Actualizamos el texto de la página
 	    info.textContent = `Página ${estado.pagina} de ${total || 1}`;
-
-	    // Bloqueo de botones
 	    btnAnt.disabled = (estado.pagina <= 1);
 	    btnSig.disabled = (estado.pagina >= total || total === 0);
-
-	    // Asignamos eventos limpios
 	    btnAnt.onclick = () => { if(estado.pagina > 1) cambiarPagina(estado.pagina - 1); };
 	    btnSig.onclick = () => { if(estado.pagina < total) cambiarPagina(estado.pagina + 1); };
 	}
@@ -228,9 +212,6 @@
 	    }
 	}
 	
-	document.querySelector('a[href="admin?vista=panel"]').addEventListener("click", () => {
-	    sessionStorage.removeItem("estado_gestion_coches");
-	});
 </script>
 </body>
 </html>

@@ -26,28 +26,59 @@
         </section>
 
         <div class="container">
-        	<h1>🚗 Novedades de la semana</h1>
-        	
+        	<h1>🚗 Novedades de la semana</h1>      	
         	<div class="welcome-section">
 		         <p>Estas son nuestras mejores propuestas.</p>
-	        </div>
-   
-            <div class="feature-cards">
- 
-        <div class="feature-card">
-             
-            <h3></h3>
-
-            <p></p>
-                
-        </div>
-</div>
+	        </div>  
+            <div class="feature-cards"></div>
         </div>
     </main>
 
     <footer class="main-footer">
         <p>&copy; 2026 Concesionario May. Todos los derechos reservados.</p>
     </footer>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", async () => {
 
+            const contenedor = document.querySelector(".feature-cards");
+
+            try {
+                const res = await fetch('Tienda_Sv?accion=novedades');
+                
+                if (res.ok) {
+                    const coches = await res.json();
+                  
+                    contenedor.innerHTML = "";
+
+                    if (!coches || coches.length === 0) {
+                        contenedor.innerHTML = "<p>No hay coches nuevos esta semana. ¡Vuelve pronto!</p>";
+                        return;
+                    }
+
+                    coches.forEach(c => {
+                        const card = document.createElement("div");
+                        card.className = "feature-card"; 
+                        card.style.cursor = "pointer";
+                   
+                        card.onclick = () => {
+                            location.href = `detalle_coche_tienda.html?id=${c.id}`;
+                        };
+
+                        card.innerHTML = `
+                            <h3>${c.marca} ${c.modelo}</h3>
+                            <p>"${c.descripcion || 'Sin descripción.'}"</p>
+                        `;
+
+                        contenedor.appendChild(card);
+                    });
+                } else {
+                    contenedor.innerHTML = "<p>No se han podido cargar las novedades.</p>";
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                contenedor.innerHTML = "<p>Error de conexión.</p>";
+            }
+        });
+    </script>
 </body>
 </html>

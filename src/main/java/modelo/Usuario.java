@@ -38,9 +38,9 @@ public class Usuario implements Serializable {
     @Column(name = "token_expiracion")
     private LocalDateTime tokenExpiracion;
     
-    // Relación con reservas
+    // Relación con ReservaPedido
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private transient List<Reserva> reservas; 
+    private transient List<ReservaPedido> reservasPedido;
 
     // Constructor vacío (Obligatorio para JPA)
     public Usuario() {}
@@ -223,10 +223,11 @@ public class Usuario implements Serializable {
 	public void setFoto(String foto) {
 		this.foto = foto;
 	}
-	
-	public List<Reserva> getReservas() { return reservas; }
-    public void setReservas(List<Reserva> reservas) { this.reservas = reservas; }
 
+
+    public List<ReservaPedido> getReservasPedido() { return reservasPedido; }
+    public void setReservasPedido(List<ReservaPedido> reservasPedido) { this.reservasPedido = reservasPedido; }
+    
 	/**
 	 * @return el serialversionuid
 	 */

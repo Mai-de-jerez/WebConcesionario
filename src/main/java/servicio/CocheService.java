@@ -6,9 +6,19 @@ import java.util.List;
 
 public class CocheService {
 
-    private CocheDAO cocheDAO = CocheDAO.getInstance();
+    private static CocheService instance = null;
 
-    // Lógica para el ADMIN (ve todo y gestiona)
+    private final CocheDAO cocheDAO = CocheDAO.getInstance();
+
+    private CocheService() {}
+
+    public static CocheService getInstance() {
+        if (instance == null) {
+            instance = new CocheService();
+        }
+        return instance;
+    }
+
     public List<Coche> listarParaAdmin(String busqueda, int pagina, int porPagina) {
         return cocheDAO.listarAdmin(busqueda, pagina, porPagina);
     }
@@ -17,7 +27,6 @@ public class CocheService {
         return cocheDAO.contarAdmin(busqueda);
     }
 
-    // Lógica para la TIENDA (solo lo disponible)
     public List<Coche> listarParaTienda(String busqueda, int pagina, int porPagina) {
         return cocheDAO.listarTienda(busqueda, pagina, porPagina);
     }
@@ -26,7 +35,6 @@ public class CocheService {
         return cocheDAO.contarTienda(busqueda);
     }
 
-    // Gestión pura
     public void guardarCoche(Coche c) {
         if (c.getId() == 0) {
             cocheDAO.insertar(c);
@@ -47,3 +55,5 @@ public class CocheService {
         return cocheDAO.obtenerTresUltimos();
     }
 }
+
+

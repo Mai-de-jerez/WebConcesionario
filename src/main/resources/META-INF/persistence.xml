@@ -9,9 +9,8 @@
         
         <class>modelo.Coche</class>
         <class>modelo.Usuario</class>
-        <class>modelo.Pedido</class>
         <class>modelo.Consultas</class>
-        <class>modelo.Reserva</class>
+        <class>modelo.ReservaPedido</class>
         
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/web_concesionario"/>
@@ -21,10 +20,19 @@
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             
-            <property name="hibernate.show_sql" value="true"/>
-            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.connection.provider_class" value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            
+            <property name="hibernate.hikari.maximumPoolSize" value="10" />
+            <property name="hibernate.hikari.minimumIdle" value="5" />
+            <property name="hibernate.hikari.connectionTimeout" value="20000" />
+            <property name="hibernate.hikari.idleTimeout" value="300000" />
 
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.hbm2ddl.auto" value="none"/>
+            
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="false"/>
         </properties>
+        
+        
     </persistence-unit>
 </persistence>

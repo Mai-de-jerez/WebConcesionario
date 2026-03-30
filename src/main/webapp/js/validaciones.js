@@ -132,6 +132,31 @@ function validarFormularioCoche() {
     return esValido;
 }
 
+// --- VALIDADOR PARA LOGIN ---
+function validarFormularioLogin() {
+    limpiarPantallaErrores(); 
+    let esValido = true;
+
+    const elUsuario = document.getElementById('usuario');
+    const elPassword = document.getElementById('password');
+
+    const errorUsuario = validarNombre(elUsuario);
+    if (errorUsuario) {
+        mostrarErrorEnCampo('usuario', errorUsuario);
+        if (esValido) elUsuario.focus();
+        esValido = false;
+    }
+
+    const errorPass = validarPassword(elPassword);
+    if (errorPass) {
+        mostrarErrorEnCampo('password', errorPass);
+        if (esValido) elPassword.focus();
+        esValido = false;
+    }
+
+    return esValido;
+}
+
 
 function validarFormularioUsuarios() {
     limpiarPantallaErrores();
