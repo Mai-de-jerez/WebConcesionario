@@ -12,7 +12,7 @@
        	<div id="notificacion" class="message" style="display:none"></div>
 
 
-        <form id="loginForm" action="Login" method="POST">
+        <form id="loginForm" action="Login" method="POST" novalidate>
         
             <div class="form-group">
                 <label for="usuario">Usuario:</label>
@@ -59,7 +59,7 @@
 
                 e.preventDefault();
                 
-                if (!validarFormularioLogin()) {
+               if (!validarFormularioLogin()) {
                     return; 
                 }
 

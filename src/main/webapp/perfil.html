@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil | May Cars</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-body">
+<nav class="navbar">
+	    <div class="nav-left">
+	        <a href="index.html" class="nav-link">Inicio</a>
+	        <a href="tienda.html" class="nav-link">Tienda</a>
+	        <a href="sobre-nosotros.html" class="nav-link">Sobre Nosotros</a>
+	        <a href="contacto.html" class="nav-link">Contacto</a>
+	    </div>
+	    <div class="nav-right" id="nav-sesion">
+	        </div>        
+	</nav>
+    <main class="content-area">
+        <div class="container" style="max-width: 900px; margin-top: 50px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: start; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="feature-card" style="padding: 10px; cursor: default; background: #f9f9f9;">
+                        <img id="img-usuario" src="img/sin-foto.png" 
+                             style="width:100%; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-height: 250px; object-fit: cover;">
+                    </div>
+                </div>
+
+                <div style="flex: 1.2; min-width: 300px;">
+                    <h1 style="font-size: 2.5em; display: flex; align-items: baseline; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <span id="username-txt" style="color: #764ba2;">Cargando...</span>
+                    </h1>
+
+                    <div class="table-container" style="margin: 0;">
+                        <table style="font-size: 0.95em; width: 100%;">
+                            <tbody>
+                            	<tr><td><strong>Estatus</strong></td><td id="val-estatus" style="font-weight: bold; color: #764ba2;"></td></tr>
+                                <tr><td><strong>Nombre</strong></td><td id="val-nombre"></td></tr>
+                                <tr><td><strong>Apellidos</strong></td><td id="val-apellidos"></td></tr>
+                                <tr><td><strong>Email</strong></td><td id="val-email"></td></tr>
+                                <tr><td><strong>Teléfono</strong></td><td id="val-telefono"></td></tr>
+                                <tr><td><strong>Dirección</strong></td><td id="val-direccion"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-buttons" style="justify-content: flex-start; margin-top: 25px; gap: 10px; display: flex;">
+                        <button onclick="location.href='mis-pedidos.html'" class="btn" style="background: #764ba2; color: white;">🛒 Mis Pedidos</button>
+                        <a href="editar-perfil.html" id="btn-editar" class="btn btn-primary">✏️ Editar Perfil</a>
+                        <a href="index.html" class="btn btn-back">Volver</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+	<script src="js/nav-session.js"></script>
+    <script>
+        async function cargarDatos() {
+            try {
+                const res = await fetch('Cliente_Sv?accion=perfil');
+                const u = await res.json();
+
+                if (u.resultado === "ERROR") {
+                    location.href = 'login.html';
+                    return;
+                }
+
+                // Inyectar datos en la ficha
+                document.getElementById("img-usuario").src = `img/${u.foto || 'sin-foto.png'}`;
+                document.getElementById("username-txt").textContent = u.nombre || u.usuario;
+                document.getElementById("val-estatus").textContent = "Cliente";
+                document.getElementById("val-nombre").textContent = u.nombre || "---";
+                document.getElementById("val-apellidos").textContent = u.apellidos || "---";
+                document.getElementById("val-email").textContent = u.email;
+                document.getElementById("val-telefono").textContent = u.telefono || "No registrado";
+                document.getElementById("val-direccion").textContent = u.direccion || "No registrada";
+
+            } catch (error) {
+                console.error("Error al cargar perfil:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", cargarDatos);
+    </script>
+</body>
+</html>

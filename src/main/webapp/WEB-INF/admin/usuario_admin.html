@@ -148,9 +148,9 @@
         const tbody = document.getElementById("cuerpoTabla");
         tbody.innerHTML = usuarios.map(u => {
             const soyYo = (u.id_usuario === idUsuarioLogueado);
-            const puedeborrar = (nivelAdmin === 1 && !soyYo);
+            const puedeborrar = (nivelAdmin === 1 && !soyYo);            
 
-            const btnBorrar = puedeborrar
+            const btnBorrar = puedeborrar 
                 ? `<a href="#" class="row-btn btn-secondary btn-small link-borrar" data-id="${u.id_usuario}">Eliminar</a>`
                 : soyYo ? `<span title="No puedes borrarte a ti mismo">🔒 (Tú)</span>` : "";
 
@@ -218,6 +218,7 @@
             setError("Error de red al intentar eliminar");
         }
     }
+    
     document.querySelector('a[href="admin?vista=panel"]').addEventListener("click", () => {
         sessionStorage.removeItem("estado_gestion_usuarios");
     });

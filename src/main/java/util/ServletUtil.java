@@ -8,7 +8,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 import java.time.LocalDateTime;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import modelo.Rol;
+import modelo.Usuario;
 
 public class ServletUtil {
     
@@ -91,5 +95,26 @@ public class ServletUtil {
             out.print(gson.toJson(data));
             out.flush(); // Aseguramos que se envíe todo
         }
+    }
+    
+    // Método para validar que un usuario esté logueado y obtener su objeto Usuario
+    public static Usuario mapearRequestAUsuario(HttpServletRequest request) {
+        Usuario u = new Usuario();
+        u.setUsuario(sanitizar(request.getParameter("usuario")));
+        u.setNombre(sanitizar(request.getParameter("nombre")));
+        u.setApellidos(sanitizar(request.getParameter("apellidos")));
+        u.setEmail(sanitizar(request.getParameter("email")));
+        u.setTelefono(sanitizar(request.getParameter("telefono")));
+        u.setDireccion(sanitizar(request.getParameter("direccion")));
+        u.setPassword(request.getParameter("password")); 
+        
+        String rolParam = request.getParameter("rol");
+        if (rolParam != null && !rolParam.isBlank()) {
+            try {
+                u.setRol(Rol.valueOf(rolParam));
+            } catch (Exception e) {
+            }
+        }
+        return u;
     }
 }

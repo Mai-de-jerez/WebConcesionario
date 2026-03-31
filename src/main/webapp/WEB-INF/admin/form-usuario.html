@@ -91,12 +91,24 @@
 	<script src="js/validaciones.js"></script>
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", async () => {
-
         	configurarLimpiezaErrores("#formUsuario");
+        	           
+            let miNivel = 99; 
+            let miId = null;
+            
+            try {
+                const resSesion = await fetch('Login');
+                if (resSesion.ok) {
+                    const yo = await resSesion.json();
+                    miNivel = yo.nivel;  
+                    miId = yo.id_usuario; 
+                }
+            } catch (e) { console.error("Error identificando sesión"); }
         	
             const params = new URLSearchParams(window.location.search);
             const id = params.get("id");
             const form = document.getElementById("formUsuario");
+            const selectRol = document.getElementById("rol");
 
             
             if (id) {
@@ -105,6 +117,16 @@
                 document.getElementById("password").placeholder = "Dejar vacío para no cambiar";
                 document.getElementById("accion-form").value = "editar";
                 await cargarDatosUsuario(id);
+                
+	            if (miNivel > 1 || (miNivel === 1 && id == miId)) {
+	                selectRol.style.backgroundColor = "#e9ecef"; // Color gris de "bloqueado"
+	                selectRol.style.cursor = "not-allowed"; 
+	                
+	                // Impedimos que el usuario abra el desplegable
+	                selectRol.onmousedown = (e) => e.preventDefault();
+	                selectRol.onkeydown = (e) => e.preventDefault();
+	
+	            }
             }
 
             form.onsubmit = async (e) => {

@@ -6,15 +6,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import modelo.Rol;
 import modelo.Usuario;
 import servicio.UsuarioService;
 import util.ServletUtil;
 import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.Part;
-import util.ImagenUtil;
+
  
 /**
  * Servlet implementation class Usuario_Sv
@@ -28,13 +28,7 @@ import util.ImagenUtil;
 public class Usuario_Sv extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final UsuarioService usuarioService = new UsuarioService();
-    private static final String PATH_IMAGENES = "C:\\Users\\carme\\Proyectos_Java\\WebConcesionario\\src\\main\\webapp\\img";
-    private static final String IMG_DEFECTO = "sin-foto.png";
     
-    @Override
-    public void init() throws ServletException {
-        ImagenUtil.validarDirectorio(PATH_IMAGENES);
-    }
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -76,16 +70,18 @@ public class Usuario_Sv extends HttpServlet {
     
     private void ejecutarCrear(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         try {
-            Usuario u = mapearRequestAUsuario(request);
+            // 1. Obtenemos al que está sentado a los mandos
+            Usuario logueado = (Usuario) request.getSession().getAttribute("usuarioLogueado");           
+            // Mapeamos los datos del nuevo usuario
+            Usuario u = ServletUtil.mapearRequestAUsuario(request);           
+            // Pillamos la foto (el paquete de bytes)
             Part imagenPart = request.getPart("foto");
-            if (imagenPart != null && imagenPart.getSize() > 0) {
-                u.setFoto(ImagenUtil.guardarArchivo(imagenPart, PATH_IMAGENES, IMG_DEFECTO));
-            } else {
-                u.setFoto(IMG_DEFECTO);
-            }
-            usuarioService.registrar(u);
+            // 4. Se lo mandamos todo al Service. Él sabrá qué hacer.
+            usuarioService.registrar(u, logueado, imagenPart);                     
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Usuario creado correctamente"));
+            
         } catch (Exception e) {
+            // Si algo falla, el Service lanza una excepción. La capturamos aquí y se la mandamos al cliente.
             ServletUtil.manejarError(response, e);
         }
     }
@@ -131,64 +127,41 @@ public class Usuario_Sv extends HttpServlet {
     private void ejecutarEditar(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "id");
-            Usuario u = mapearRequestAUsuario(request);
+            Usuario logueado = (Usuario) request.getSession().getAttribute("usuarioLogueado");          
+            // Creamos el objeto con los datos del formulario
+            Usuario u = ServletUtil.mapearRequestAUsuario(request);
             u.setId_usuario(id);
+            // Recuperamos los datos de la foto
             String fotoActual = request.getParameter("foto_actual");
             Part imagenPart = request.getPart("foto");
-            if (imagenPart != null && imagenPart.getSize() > 0) {
-                String nuevaFoto = ImagenUtil.guardarArchivo(imagenPart, PATH_IMAGENES, IMG_DEFECTO);
-                u.setFoto(nuevaFoto);
-                if (fotoActual != null && !fotoActual.equals(IMG_DEFECTO)) {
-                    ImagenUtil.borrarArchivo(fotoActual, PATH_IMAGENES, IMG_DEFECTO);
-                }
-            } else {
-                u.setFoto(fotoActual);
-            }
-            usuarioService.actualizar(u);
+            // El Service se encarga de la seguridad y de los archivos
+            usuarioService.actualizar(u, logueado, imagenPart, fotoActual);
+            
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Usuario actualizado correctamente"));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
+
     
     private void ejecutarEliminar(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "id");
-
             Usuario logueado = (Usuario) request.getSession().getAttribute("usuarioLogueado");
-            if (logueado.getId_usuario() == id) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "No puedes eliminar tu propia cuenta"));
-                return;
-            }
+
+            usuarioService.eliminar(id, logueado);
             
-            usuarioService.eliminar(id);
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Usuario eliminado correctamente"));
+            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Usuario eliminado"));
         } catch (Exception e) {
-            ServletUtil.manejarError(response, e);
+            ServletUtil.manejarError(response, e); 
         }
     }
 
-    private Usuario mapearRequestAUsuario(HttpServletRequest request) {
-        Usuario u = new Usuario();
-        u.setUsuario(ServletUtil.sanitizar(request.getParameter("usuario")));
-        u.setNombre(ServletUtil.sanitizar(request.getParameter("nombre")));
-        u.setApellidos(ServletUtil.sanitizar(request.getParameter("apellidos")));
-        u.setEmail(ServletUtil.sanitizar(request.getParameter("email")));
-        u.setTelefono(ServletUtil.sanitizar(request.getParameter("telefono")));
-        u.setDireccion(ServletUtil.sanitizar(request.getParameter("direccion")));
-        u.setPassword(request.getParameter("password"));
-        String rolParam = request.getParameter("rol");
-        if (rolParam != null && !rolParam.isBlank()) {
-            u.setRol(Rol.valueOf(rolParam));
-        }
-        return u;
-    }
 
     private boolean esAdmin(HttpServletRequest request) {
-        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (session == null) return false;
-        modelo.Usuario usu = (modelo.Usuario) session.getAttribute("usuarioLogueado");
-        return (usu != null && usu.getRol().getNivel() <= 2);
+        Usuario usu = (Usuario) session.getAttribute("usuarioLogueado");
+        return (usu != null && usu.getRol().getNivel() <= 2); 
     }
 }
