@@ -7,13 +7,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import modelo.Coche;
 import modelo.EstadoPedido;
 import modelo.ReservaPedido;
 import modelo.Usuario;
-import servicio.CocheService;
 import servicio.ReservaPedidoService;
 import util.ServletUtil;
 
@@ -23,7 +22,6 @@ public class Pedido_Sv extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final int POR_PAGINA = 10;
     private final ReservaPedidoService pedidoService = ReservaPedidoService.getInstance();
-    private final CocheService cocheService = CocheService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -64,33 +62,28 @@ public class Pedido_Sv extends HttpServlet {
         	ejecutarCrear(request, response);
 	    }
 	}
+     
     
     private void ejecutarCrear(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
             String email = request.getParameter("email");
             int idCoche = ServletUtil.parsearInt(request.getParameter("idCoche"), "ID del coche");
-            double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));
+            double importeTotal = ServletUtil.parsearDouble(request.getParameter("importeTotal"));
+            String fechaPagoStr = request.getParameter("fechaPago");
+            LocalDateTime fechaPago = fechaPagoStr != null && !fechaPagoStr.isBlank() 
+                ? LocalDateTime.parse(fechaPagoStr) 
+                : LocalDateTime.now();
+ 
+            pedidoService.crearVentaDirecta(email, idCoche, importeTotal, fechaPago);
 
-            Coche coche = cocheService.obtenerCoche(idCoche);
-
-            if (coche == null) {
-                throw new IllegalArgumentException("El coche con ID " + idCoche + " no existe.");
-            }
-  
-            pedidoService.crearSinUsuario(email, coche, importeSenal);
-
-            ServletUtil.enviarRespuesta(response, Map.of(
-                "resultado", "OK", 
-                "mensaje", "Reserva creada correctamente para: " + email
-            ));
-
+            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Venta creada correctamente"));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
-    }
-    
-
+    } 
+   
+   
     private void ejecutarListar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -129,18 +122,19 @@ public class Pedido_Sv extends HttpServlet {
         }
     }
 
+    
     private void ejecutarCompletar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            double importeTotal = ServletUtil.parsearDouble(request.getParameter("importeTotal"));
             String observaciones = ServletUtil.sanitizar(request.getParameter("observaciones"));
-            pedidoService.completar(id, importeTotal, observaciones);
+            pedidoService.completar(id, observaciones);
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Pedido completado correctamente"));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
+
 
     private void ejecutarCancelar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {

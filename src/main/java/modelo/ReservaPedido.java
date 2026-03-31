@@ -40,14 +40,17 @@ public class ReservaPedido implements Serializable {
     private LocalDateTime fechaExpiracion;
 
     @Column(name = "fecha_pago")
-    private LocalDateTime fechaPago; // cuando el admin cobra en tienda
+    private LocalDateTime fechaPago; 
 
     // ─── DINERO ───
     @Column(name = "importe_senal")
-    private double importeSenal = 0.0; // lo que paga al reservar
+    private double importeSenal = 0.0; 
 
     @Column(name = "importe_total")
-    private double importeTotal = 0.0; // precio final del coche
+    private double importeTotal = 0.0; 
+    
+    @Column(name = "importe_final_abonado")
+    private double importeFinalAbonado = 0.0;
 
     // ─── ESTADO ───
     @Enumerated(EnumType.STRING)
@@ -132,6 +135,9 @@ public class ReservaPedido implements Serializable {
 
     public double getImporteTotal() { return importeTotal; }
     public void setImporteTotal(double importeTotal) { this.importeTotal = importeTotal; }
+    
+    public double getImporteFinalAbonado() { return importeFinalAbonado; }
+    public void setImporteFinalAbonado(double importeFinalAbonado) { this.importeFinalAbonado = importeFinalAbonado; }
 
     public EstadoPedido getEstado() { return estado; }
     public void setEstado(EstadoPedido estado) { this.estado = estado; }

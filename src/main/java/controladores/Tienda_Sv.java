@@ -136,8 +136,7 @@ public class Tienda_Sv extends HttpServlet {
             int idCoche = ServletUtil.parsearInt(request.getParameter("idCoche"), "ID del coche");
             double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));
 
-            Coche coche = cocheService.obtenerCoche(idCoche);
-            pedidoService.crear(user, coche, importeSenal);
+            pedidoService.crear(user, idCoche, importeSenal);
 
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Reserva realizada correctamente"));
                        
@@ -151,6 +150,8 @@ public class Tienda_Sv extends HttpServlet {
             ServletUtil.manejarError(response, e);
         }
     }
+    
+
 
     private boolean esClienteLogueado(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

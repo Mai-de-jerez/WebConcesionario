@@ -4,7 +4,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import modelo.*;
 import util.JPAUtil;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class ReservaPedidoDAO {
@@ -15,37 +14,7 @@ public class ReservaPedidoDAO {
         if (instance == null) instance = new ReservaPedidoDAO();
         return instance;
     }
-
-    // ─── GUARDAR ───
-    public void guardar(ReservaPedido rp) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.persist(rp);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
-    }
-
-    // ─── ACTUALIZAR ───
-    public void actualizar(ReservaPedido rp) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.merge(rp);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) em.getTransaction().rollback();
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
-    }
-
+  
 
     // ─── OBTENER POR ID ───
     public ReservaPedido obtenerPorId(int id) {
@@ -57,20 +26,6 @@ public class ReservaPedidoDAO {
         }
     }
 
-    // ─── OBTENER VENCIDOS ───
-    public List<ReservaPedido> obtenerVencidos() {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        try {
-            return em.createQuery(
-                "SELECT rp FROM ReservaPedido rp WHERE rp.estado = :estado " +
-                "AND rp.fechaExpiracion < :ahora", ReservaPedido.class)
-                .setParameter("estado", EstadoPedido.PENDIENTE)
-                .setParameter("ahora", LocalDateTime.now())
-                .getResultList();
-        } finally {
-            em.close();
-        }
-    }
 
     // ─── LISTAR TODOS (admin) con búsqueda y paginación ───
     public List<ReservaPedido> listarAdmin(String busqueda, EstadoPedido estado, int pagina, int porPagina) {

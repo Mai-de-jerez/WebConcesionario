@@ -229,7 +229,7 @@ select:focus {
         border-radius: 8px; 
     }
 
-/* ----------Botones---------- */
+/* ---------- BOTONES ---------- */
 
 .btn {
     padding: 12px 30px;
@@ -269,6 +269,7 @@ select:focus {
     box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
 }
 
+/* Botones de exito, regreso */
 
 .btn-success {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -293,6 +294,31 @@ select:focus {
     transform: translateY(-2px);
 }
 
+/* botones de la paginación */
+.btn-ver {
+    background: #764ba2;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-ver:hover:not(:disabled) {
+    background: #5a368c;
+    transform: translateY(-1px);
+}
+
+
+.btn-ver:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+
+/* botones de acción en zona admin */
 
 .btn-small {
     padding: 6px 12px;
@@ -309,7 +335,7 @@ select:focus {
     margin-bottom: 30px;
 }
 
-/* Tabla de vehículos */
+/* Tablas */
 .table-container {
     overflow-x: auto;
     margin: 30px 0;
@@ -418,7 +444,7 @@ textarea.input-error {
     outline: none; 
 }
 
-/* MODAL ELIMINAR */
+/* MODAL PARA ELIMINAR COCHE/USUARIO */
 
 .modal-simple {
     position: fixed;
@@ -453,7 +479,7 @@ textarea.input-error {
 
 
 
-/* paginacion */
+/* PAGINACIÓN  */
 
 .paginacion-container {
     display: flex;
@@ -472,32 +498,11 @@ textarea.input-error {
 }
 
 
-.btn-ver {
-    background: #764ba2;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-}
 
-.btn-ver:hover:not(:disabled) {
-    background: #5a368c;
-    transform: translateY(-1px);
-}
-
-/* Cuando el botón está bloqueado */
-.btn-ver:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-    transform: none;
-}
 
 /*-----TIENDA---------*/
 
-/* tarjetas para mostrar los coches en tienda */
+/* tarjetas para mostrar los coches */
 
 .feature-cards-shop {
     margin-top: 40px;
@@ -576,7 +581,7 @@ textarea.input-error {
     margin-top: 50px;
 }
 
-/* Responsive */
+/* Responsive (móviles muy peques) */
 
 @media (max-width: 480px) {
     body {
@@ -596,6 +601,8 @@ textarea.input-error {
 
 
 }
+
+/* Responsive (móviles y tablets) */
 
 @media (max-width: 768px) {
 	
