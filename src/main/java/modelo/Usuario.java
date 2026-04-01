@@ -41,6 +41,9 @@ public class Usuario implements Serializable {
     // Relación con ReservaPedido
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private transient List<ReservaPedido> reservasPedido;
+    
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<Consultas> consultas;
 
     // Constructor vacío (Obligatorio para JPA)
     public Usuario() {}
@@ -233,6 +236,14 @@ public class Usuario implements Serializable {
 	 */
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	
+	public List<Consultas> getConsultas() {
+	    return consultas;
+	}
+
+	public void setConsultas(List<Consultas> consultas) {
+	    this.consultas = consultas;
 	}
 	
 

@@ -14,8 +14,7 @@
             <a href="sobre-nosotros.html" class="nav-link">Sobre Nosotros</a>
             <a href="contacto.html" class="nav-link">Contacto</a>
         </div>
-       	<div class="nav-right" id="nav-sesion">
-            </div>
+        <div class="nav-right" id="nav-sesion"></div>
     </nav>
 
     <main class="content-area">
@@ -37,31 +36,21 @@
                 <div>
                     <h2>Envíanos un mensaje</h2>
                     <div id="feedback-msj"></div>
- 
-                    <form id="formContacto" style="display: none;">
-				        <div class="form-group">
-				            <label>Nombre Completo:</label>
-				            <input type="text" id="contactoNombre" name="nombre" required>
-				        </div>
-				        <div class="form-group">
-				            <label>Email:</label>
-				            <input type="email" id="contactoEmail" name="email" readonly style="background-color: #e9ecef; cursor: not-allowed;" required>
-				        </div>
-				        <div class="form-group">
-				            <label>Mensaje:</label>
-				            <textarea id="contactoMensaje" name="mensaje" rows="6" style="width: 100%; padding: 12px 15px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 1em; font-family: inherit;" required></textarea>
-				        </div>
+                    <form id="formContacto">
+                        <div class="form-group">
+                            <label>Nombre Completo:</label>
+                            <input type="text" id="contactoNombre" name="nombre" required placeholder="Tu nombre">
+                        </div>
+                        <div class="form-group">
+                            <label>Email:</label>
+                            <input type="email" id="contactoEmail" name="email" required placeholder="tu@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Mensaje:</label>
+                            <textarea id="contactoMensaje" name="mensaje" rows="6" style="width: 100%; padding: 12px 15px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 1em; font-family: inherit;" required></textarea>
+                        </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Consulta</button>
                     </form>
-
-                    <div id="bloque-registro" style="display: none; text-align: center; margin-top: 15px;">
-                        <p style="color: #d9534f; font-weight: bold; margin-bottom: 10px;">
-                            ⚠️ Debes estar registrado para usar el formulario
-                        </p>
-                        <a href="login.html" class="btn-nav" style="display: block; background-color: #007bff; color: white; text-decoration: none; padding: 10px; border-radius: 5px;">
-                            Ir al Login ahora
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -73,46 +62,81 @@
 
     <script src="js/nav-session.js"></script>
     <script type="text/javascript">
-	    document.addEventListener("DOMContentLoaded", async () => {
-	        const form = document.getElementById("formContacto");
-	        const bloqueRegistro = document.getElementById("bloque-registro");
-	        
-	        try {
-	            const res = await fetch('Auth_Sv?accion=verificar');
-	            
-	            if (res.ok) {
-	                const usuario = await res.json();
-	                // Usuario logueado: mostramos formulario y rellenamos datos
-	                form.style.display = "block";
-	                document.getElementById("contactoNombre").value = usuario.nombre;
-	                document.getElementById("contactoEmail").value = usuario.email; // Asegúrate que tu Auth_Sv mande el email
-	            } else {
-	                // Usuario no logueado: mostramos aviso
-	                bloqueRegistro.style.display = "block";
-	            }
-	        } catch (err) {
-	            bloqueRegistro.style.display = "block";
-	        }
-	
-	        // Manejar el envío del formulario por AJAX
-	        form.onsubmit = async (e) => {
-	            e.preventDefault();
-	            const formData = new FormData(form);
-	            
-	            const res = await fetch('EnviarMensaje', {
-	                method: 'POST',
-	                body: new URLSearchParams(formData)
-	            });
-	
-	            const feedback = document.getElementById("feedback-msj");
-	            if (res.ok) {
-	                feedback.innerHTML = `<div class="message-success" style="color: #155724; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px;">✅ Mensaje enviado con éxito.</div>`;
-	                form.reset();
-	            } else {
-	                feedback.innerHTML = `<div class="message-error" style="color: #721c24; background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px;">❌ Error al enviar el mensaje.</div>`;
-	            }
-	        };
-	    });
+    document.addEventListener("DOMContentLoaded", async () => {
+        const form = document.getElementById("formContacto");
+        const inputNombre = document.getElementById("contactoNombre");
+        const inputEmail = document.getElementById("contactoEmail");
+        const feedback = document.getElementById("feedback-msj");
+
+        // --- 1. LÓGICA DE AUTORELLENADO (Preguntamos al Servlet de Login) ---
+        try {
+            const resSesion = await fetch('Login', {
+                headers: { 'Accept': 'application/json' }
+            });
+            
+            if (resSesion.ok) {
+                const datos = await resSesion.json();
+                
+                // Si el servidor nos devuelve datos, rellenamos y aplicamos estilos
+                if (datos.nombre && datos.email) {
+                    inputNombre.value = datos.nombre;
+                    inputEmail.value = datos.email;
+                    
+                    // Bloqueamos para que no se puedan editar
+                    inputNombre.readOnly = true;
+                    inputEmail.readOnly = true;
+                    
+                    // Aplicamos el estilo gris directamente por JS para no tocar CSS
+                    [inputNombre, inputEmail].forEach(el => {
+                        el.style.backgroundColor = "#e9ecef";
+                        el.style.color = "#495057";
+                        el.style.cursor = "not-allowed";
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Error al recuperar sesión para el formulario", err);
+        }
+       
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // IMPORTANTE: Cogemos los valores directamente de los inputs
+            const nombreVal = inputNombre.value;
+            const emailVal = inputEmail.value;
+            const mensajeVal = document.getElementById("contactoMensaje").value;
+
+            // Metemos los datos en un objeto para el fetch
+            const params = new URLSearchParams();
+            params.append("nombre", nombreVal);
+            params.append("email", emailVal);
+            params.append("mensaje", mensajeVal);
+
+            try {
+                
+                const res = await fetch('EnviarMensaje', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    feedback.innerHTML = `<div style="color: green; padding: 10px; background: #d4edda;">✅ ${data.mensaje}</div>`;
+                    
+                    // Si es invitado, limpiamos todo. Si no, solo el mensaje.
+                    if (!inputNombre.readOnly) form.reset();
+                    else document.getElementById("contactoMensaje").value = "";
+                } else {
+                    feedback.innerHTML = `<div style="color: red; padding: 10px; background: #f8d7da;">❌ Error en el servidor.</div>`;
+                }
+            } catch (err) {
+                feedback.innerHTML = `<div style="color: red; padding: 10px; background: #f8d7da;">❌ Error de conexión.</div>`;
+            }
+        };
+    });
     </script>
 </body>
 </html>

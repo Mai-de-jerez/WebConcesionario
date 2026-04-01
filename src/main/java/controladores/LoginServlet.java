@@ -35,6 +35,7 @@ public class LoginServlet extends HttpServlet {
             respuestaJS.put("usuario", u.getUsuario());
             respuestaJS.put("nombre", u.getNombre());   
             respuestaJS.put("nivel", u.getRol().getNivel());
+            respuestaJS.put("email", u.getEmail());
 
             ServletUtil.enviarRespuesta(response, respuestaJS);
         } else {
@@ -42,6 +43,7 @@ public class LoginServlet extends HttpServlet {
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Sesión no iniciada"));
         }
     }
+    
     
     
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {        
@@ -62,6 +64,7 @@ public class LoginServlet extends HttpServlet {
                 respuestaJS.put("usuario", u.getUsuario());
                 respuestaJS.put("nombre", u.getNombre());   
                 respuestaJS.put("nivel", u.getRol().getNivel());
+                respuestaJS.put("email", u.getEmail());
 
 
                 System.out.println("✅ Login exitoso para: " + u.getUsuario() + " (Nivel: " + u.getRol().getNivel() + ")");

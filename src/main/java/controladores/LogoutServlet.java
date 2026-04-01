@@ -29,16 +29,16 @@ public class LogoutServlet extends HttpServlet {
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         
-        // 1. Buscamos la sesión actual (false para no crear una si no existe)
+        // Buscamos la sesión actual (false para no crear una si no existe)
         HttpSession sesion = request.getSession(false); 
         
         if (sesion != null) {
-            // 2. Destruimos la sesión
+            // destruimos la sesión
             sesion.invalidate();
             System.out.println("✅ Sesión destruida con éxito.");
         }
         
-        // 3. Redirigimos al index con un mensajito de despedida
+        // redirigimos al index con un mensajito de despedida
         response.sendRedirect("index.html?mensaje=Has cerrado sesion correctamente. ¡Vuelve pronto!");
     }
 

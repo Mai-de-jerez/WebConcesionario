@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
+
 @Entity
 @Table(name = "consultas")
 public class Consultas implements Serializable {
@@ -23,7 +24,13 @@ public class Consultas implements Serializable {
     
     @Column(name = "fecha")
     private LocalDateTime fecha;
+    
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", nullable = true) 
+    private Usuario usuario;
+    
+    
     // Constructor vacío (Obligatorio para JPA)
     public Consultas() {
         super();
@@ -56,6 +63,16 @@ public class Consultas implements Serializable {
     public LocalDateTime getFecha() { return fecha; }
     public void setFecha(LocalDateTime fecha) { this.fecha = fecha; }
 
+   
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+    
+    
     @Override
     public String toString() {
         return "Consultas [id=" + id + ", nombre=" + nombre + ", email=" + email + ", mensaje=" + mensaje + ", fecha="
