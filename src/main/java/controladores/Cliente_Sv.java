@@ -121,10 +121,8 @@ public class Cliente_Sv extends HttpServlet {
         	// Primero obtenemos al usuario logueado 
             Usuario logueado = (Usuario) request.getSession().getAttribute("usuarioLogueado");
             // Mapeamos los datos editados del usuario
-            Usuario u = ServletUtil.mapearRequestAUsuario(request);
-      
-            u.setId_usuario(logueado.getId_usuario());
-            
+            Usuario u = ServletUtil.mapearRequestAUsuario(request);     
+            u.setId_usuario(logueado.getId_usuario());      
             // Recuperamos los datos de la foto
             String fotoActual = request.getParameter("foto_actual");
             Part imagenPart = request.getPart("foto"); 

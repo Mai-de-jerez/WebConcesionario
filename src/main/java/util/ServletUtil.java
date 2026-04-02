@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import modelo.Coche;
+import modelo.EstadoVehiculo;
 import modelo.Rol;
+import modelo.TipoMotor;
 import modelo.Usuario;
 
 public class ServletUtil {
@@ -116,5 +119,22 @@ public class ServletUtil {
             }
         }
         return u;
+    }
+    
+    // Método para mapear los parámetros de un formulario a un objeto Coche, con validaciones básicas
+    public static Coche mapearRequestACoche(HttpServletRequest request) throws Exception {
+        Coche c = new Coche();
+        c.setMarca(sanitizar(request.getParameter("marca"))); 
+        c.setModelo(sanitizar(request.getParameter("modelo")));
+        c.setMatricula(sanitizar(request.getParameter("matricula")));
+        c.setPrecio(parsearDouble(request.getParameter("precio")));
+        c.setColor(sanitizar(request.getParameter("color")));
+        c.setKm(parsearInt(request.getParameter("km"), "km"));
+        c.setAnio(request.getParameter("anio"));
+        c.setTipoMotor(TipoMotor.valueOf(request.getParameter("tipoMotor")));
+        c.setNumPuertas(parsearInt(request.getParameter("numPuertas"), "puertas"));
+        c.setEstado(EstadoVehiculo.valueOf(request.getParameter("estado")));
+        c.setDescripcion(sanitizar(request.getParameter("descripcion")));
+        return c;
     }
 }

@@ -43,7 +43,7 @@ public class Usuario implements Serializable {
     private transient List<ReservaPedido> reservasPedido;
     
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private List<Consultas> consultas;
+    private transient List<Consultas> consultas;
 
     // Constructor vacío (Obligatorio para JPA)
     public Usuario() {}

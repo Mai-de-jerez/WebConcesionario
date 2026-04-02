@@ -11,7 +11,6 @@ import java.io.IOException;
 import modelo.Usuario;
 import servicio.UsuarioService;
 import util.ServletUtil;
-import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.Part;
 
@@ -27,8 +26,7 @@ import jakarta.servlet.http.Part;
 	)
 public class Usuario_Sv extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final UsuarioService usuarioService = new UsuarioService();
-    
+    private final UsuarioService usuarioService = UsuarioService.getInstance();
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -70,54 +68,50 @@ public class Usuario_Sv extends HttpServlet {
     
     private void ejecutarCrear(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         try {
-            // 1. Obtenemos al que está sentado a los mandos
             Usuario logueado = (Usuario) request.getSession().getAttribute("usuarioLogueado");           
-            // Mapeamos los datos del nuevo usuario
             Usuario u = ServletUtil.mapearRequestAUsuario(request);           
-            // Pillamos la foto (el paquete de bytes)
+
             Part imagenPart = request.getPart("foto");
-            // 4. Se lo mandamos todo al Service. Él sabrá qué hacer.
-            usuarioService.registrar(u, logueado, imagenPart);                     
+            usuarioService.registrar(u, logueado, imagenPart); 
+            
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Usuario creado correctamente"));
             
         } catch (Exception e) {
-            // Si algo falla, el Service lanza una excepción. La capturamos aquí y se la mandamos al cliente.
             ServletUtil.manejarError(response, e);
         }
     }
 
+    
     private void ejecutarListar(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String busqueda = request.getParameter("busqueda");
             int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), 1);
-            int porPagina = 8;
-            if (pagina < 1) pagina = 1;
+            int porPagina = 8; 
 
-            List<Usuario> lista = usuarioService.listar(busqueda, pagina, porPagina);
-            long total = usuarioService.total(busqueda);
-            int totalPaginas = (int) Math.ceil((double) total / porPagina);
+            Map<String, Object> respuesta = usuarioService.listarPaginado(busqueda, pagina, porPagina);
 
-            ServletUtil.enviarRespuesta(response, Map.of(
-                "usuarios", lista,
-                "totalPaginas", totalPaginas,
-                "paginaActual", pagina
-            ));
+            ServletUtil.enviarRespuesta(response, respuesta);
+            
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
 
+
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "id");
+   
             Usuario u = usuarioService.obtener(id);
+            
             if (u == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Usuario no encontrado"));
                 return;
             }
-            u.setPassword(null); // nunca enviamos la password al frontend
+
             ServletUtil.enviarRespuesta(response, u);
+            
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
@@ -128,13 +122,11 @@ public class Usuario_Sv extends HttpServlet {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "id");
             Usuario logueado = (Usuario) request.getSession().getAttribute("usuarioLogueado");          
-            // Creamos el objeto con los datos del formulario
+
             Usuario u = ServletUtil.mapearRequestAUsuario(request);
             u.setId_usuario(id);
-            // Recuperamos los datos de la foto
             String fotoActual = request.getParameter("foto_actual");
             Part imagenPart = request.getPart("foto");
-            // El Service se encarga de la seguridad y de los archivos
             usuarioService.actualizar(u, logueado, imagenPart, fotoActual);
             
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Usuario actualizado correctamente"));

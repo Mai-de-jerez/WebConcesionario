@@ -6,14 +6,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import modelo.Coche;
-import modelo.TipoMotor;
-import modelo.EstadoVehiculo;
-import util.ImagenUtil;
+import modelo.Usuario;
 import util.ServletUtil;
 import servicio.CocheService;
 
@@ -27,13 +25,7 @@ public class Coche_Sv extends HttpServlet {
 
     private final CocheService cocheService = CocheService.getInstance();
     private static final long serialVersionUID = 1L;
-    private static final String PATH_IMAGENES = "C:\\Users\\carme\\Proyectos_Java\\WebConcesionario\\src\\main\\webapp\\img";
-    private static final String IMG_DEFECTO = "sin-foto.png";
 
-    @Override
-    public void init() throws ServletException {
-        ImagenUtil.validarDirectorio(PATH_IMAGENES);
-    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -73,32 +65,22 @@ public class Coche_Sv extends HttpServlet {
             ejecutarEditar(request, response);
         }
     }
-
+    
     private void ejecutarListar(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String busqueda = request.getParameter("busqueda");
             int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
             int porPagina = 6; 
 
-            if (pagina < 1) pagina = 1;
-
-            List<Coche> lista = cocheService.listarParaAdmin(busqueda, pagina, porPagina);
-
-            long totalCoches = cocheService.totalCochesAdmin(busqueda);
-
-            int totalPaginas = (int) Math.ceil((double) totalCoches / porPagina);
-
-            Map<String, Object> respuesta = Map.of(
-                "coches", lista,
-                "totalPaginas", totalPaginas, 
-                "paginaActual", pagina
-            );
+            Map<String, Object> respuesta = cocheService.listarParaAdmin(busqueda, pagina, porPagina);
 
             ServletUtil.enviarRespuesta(response, respuesta);
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
+    
+ 
 
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -110,103 +92,63 @@ public class Coche_Sv extends HttpServlet {
         }
     }
 
+    
     private void ejecutarAlta(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        String nombreImagenUnico = IMG_DEFECTO;
         try {
-            Coche c = mapearRequestACoche(request);
-            
+ 
+            Coche c = ServletUtil.mapearRequestACoche(request);
+   
             Part imagenPart = request.getPart("imagen");
-            if (imagenPart != null && imagenPart.getSize() > 0) {
-                nombreImagenUnico = ImagenUtil.guardarArchivo(imagenPart, PATH_IMAGENES, IMG_DEFECTO);
-                c.setImagen(nombreImagenUnico);
-            } else {
-                c.setImagen(IMG_DEFECTO);
-            }
 
-            cocheService.guardarCoche(c);
+            cocheService.guardarCoche(c, imagenPart);
+
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Coche creado correctamente"));
             
         } catch (Exception e) {
-            if (!nombreImagenUnico.equals(IMG_DEFECTO)) {
-                ImagenUtil.borrarArchivo(nombreImagenUnico, PATH_IMAGENES, IMG_DEFECTO);
-            }
+
             ServletUtil.manejarError(response, e);
         }
     }
 
+    
     private void ejecutarEditar(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        String nombreImagenNueva = null;
         try {
-            Coche c = mapearRequestACoche(request);
-            int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del coche");
-            c.setId(id);
-            
+    
+            Coche c = ServletUtil.mapearRequestACoche(request);
+            c.setId(ServletUtil.parsearInt(request.getParameter("id"), "ID del coche"));
+      
             String imagenActual = request.getParameter("imagen_actual");
             Part imagenPart = request.getPart("imagen");
-            
-            if (imagenPart != null && imagenPart.getSize() > 0) {
-                nombreImagenNueva = ImagenUtil.guardarArchivo(imagenPart, PATH_IMAGENES, IMG_DEFECTO);
-                c.setImagen(nombreImagenNueva);
-            } else {
-                c.setImagen(imagenActual);
-            }
-
-            cocheService.guardarCoche(c); 
-
-            if (nombreImagenNueva != null && imagenActual != null && !imagenActual.equals(IMG_DEFECTO)) {
-                ImagenUtil.borrarArchivo(imagenActual, PATH_IMAGENES, IMG_DEFECTO);
-            }
+            // El Service se encarga 
+            cocheService.guardarCoche(c, imagenPart, imagenActual);
 
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Coche actualizado"));
         } catch (Exception e) {
-            if (nombreImagenNueva != null) ImagenUtil.borrarArchivo(nombreImagenNueva, PATH_IMAGENES, IMG_DEFECTO);
             ServletUtil.manejarError(response, e);
         }
     }
     
-
-
+    
     private void ejecutarEliminar(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del coche");
-            Coche coche = cocheService.obtenerCoche(id);
-            String imagenABorrar = coche.getImagen();
 
             cocheService.eliminarCoche(id);
-            
-            if (imagenABorrar != null && !imagenABorrar.equals(IMG_DEFECTO)) {
-                ImagenUtil.borrarArchivo(imagenABorrar, PATH_IMAGENES, IMG_DEFECTO);
-            }
 
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Coche eliminado"));
+            
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
 
-    // Helper para no repetir código en alta y editar
-    private Coche mapearRequestACoche(HttpServletRequest request) throws Exception {
-        Coche c = new Coche();
-        c.setMarca(ServletUtil.sanitizar(request.getParameter("marca")));
-        c.setModelo(ServletUtil.sanitizar(request.getParameter("modelo")));
-        c.setMatricula(ServletUtil.sanitizar(request.getParameter("matricula")));
-        c.setPrecio(ServletUtil.parsearDouble(request.getParameter("precio")));
-        c.setColor(ServletUtil.sanitizar(request.getParameter("color")));
-        c.setKm(ServletUtil.parsearInt(request.getParameter("km"), "km"));
-        c.setAnio(request.getParameter("anio"));
-        c.setTipoMotor(TipoMotor.valueOf(request.getParameter("tipoMotor")));
-        c.setNumPuertas(ServletUtil.parsearInt(request.getParameter("numPuertas"), "puertas"));
-        c.setEstado(EstadoVehiculo.valueOf(request.getParameter("estado")));
-        c.setDescripcion(ServletUtil.sanitizar(request.getParameter("descripcion")));
-        return c;
-    }
     
-    
+     
     private boolean esAdmin(HttpServletRequest request) {
-        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        HttpSession session = request.getSession(false); 
         if (session == null) return false;
         
-        modelo.Usuario usu = (modelo.Usuario) session.getAttribute("usuarioLogueado");
+        Usuario usu = (Usuario) session.getAttribute("usuarioLogueado");
 
         return (usu != null && usu.getRol().getNivel() <= 2);
     }

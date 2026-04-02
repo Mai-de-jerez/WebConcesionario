@@ -7,23 +7,56 @@ import modelo.Usuario;
 import util.ImagenUtil;
 
 import java.util.List;
+import java.util.Map;
 
 public class UsuarioService {
 	
-    private UsuarioDAO usuarioDAO = UsuarioDAO.getInstance();
+	private UsuarioDAO usuarioDAO = UsuarioDAO.getInstance();
     private final String PATH_IMAGENES = System.getenv("PATH_FOTOS");
     private static final String IMG_DEFECTO = "sin-foto.png";
-
-    public List<Usuario> listar(String busqueda, int pagina, int porPagina) {
-        return usuarioDAO.listar(busqueda, pagina, porPagina);
+	
+    private static UsuarioService instance = null;
+	
+    
+    public static UsuarioService getInstance() {
+        if (instance == null) {
+            instance = new UsuarioService();
+        }
+        return instance; 
     }
+    
+    
+    
+    public Map<String, Object> listarPaginado(String busqueda, int pagina, int porPagina) {
+
+        if (pagina < 1) pagina = 1;
+
+        List<Usuario> lista = usuarioDAO.listar(busqueda, pagina, porPagina);
+        long totalUsuarios = usuarioDAO.contarTodos(busqueda);
+        // calculamos el total de páginas 
+        int totalPaginas = (int) Math.ceil((double) totalUsuarios / porPagina);
+        // montar el mapa de respuesta
+        return Map.of(
+            "usuarios", lista,
+            "totalPaginas", totalPaginas,
+            "paginaActual", pagina
+        );
+    }
+    
 
     public long total(String busqueda) {
         return usuarioDAO.contarTodos(busqueda);
     }
-
+    
     public Usuario obtener(int id) {
-        return usuarioDAO.obtenerPorId(id);
+
+        Usuario u = usuarioDAO.obtenerPorId(id);
+
+        if (u != null) {
+            u.setPassword(null); 
+        }
+        
+        return u;
     }
 
     
@@ -40,8 +73,7 @@ public class UsuarioService {
         } else {
             nuevo.setFoto(IMG_DEFECTO); 
         }
-
-        // A la base de datos
+        // a la base de datos
         usuarioDAO.registrar(nuevo); 
     }
     

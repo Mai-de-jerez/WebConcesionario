@@ -400,7 +400,9 @@ td {
     gap: 15px;
 }
 
+
 /* Mensajes de exito, error*/
+
 .message {
     padding: 15px;
     border-radius: 8px;
@@ -419,6 +421,8 @@ td {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
+
 
 .mensaje-error {
     background: #fed7d7;
@@ -562,7 +566,7 @@ textarea.input-error {
     align-items: center;
 }
 
-/* imagenes */
+/* imagenes de coches */
 #img-coche{
 	width:100%; 
 	border-radius:15px; 

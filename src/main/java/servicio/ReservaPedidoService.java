@@ -76,20 +76,22 @@ public class ReservaPedidoService {
         }
     }
 
-    // ─── COMPLETAR (admin cobra en tienda) ───
     
-    public void completar(int id, String observaciones) {
+    // ─── COMPLETAR (admin cobra en tienda) ───
+    public void completar(int id) { 
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
             ReservaPedido rp = em.find(ReservaPedido.class, id);
+            
             if (rp == null) throw new IllegalArgumentException("Pedido no encontrado.");
-            if (!rp.isPendiente()) throw new IllegalStateException("Solo se pueden completar pedidos PENDIENTES.");
+            if (!rp.isPendiente()) throw new IllegalStateException("Solo se pueden completar pedidos PENDIENTES.");           
+            // Actualizamos 
             rp.setEstado(EstadoPedido.ABONADO);
             rp.setImporteFinalAbonado(rp.getImporteTotal());
             rp.setFechaPago(LocalDateTime.now());
             rp.getCoche().setEstado(EstadoVehiculo.VENDIDO);
-            if (observaciones != null) rp.setObservaciones(observaciones);
+
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -102,7 +104,7 @@ public class ReservaPedidoService {
 
     // ─── CANCELAR (admin) ───
     
-    public void cancelar(int id, String observaciones) {
+    public void cancelar(int id) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
@@ -112,7 +114,7 @@ public class ReservaPedidoService {
             rp.setEstado(EstadoPedido.CANCELADO);
             rp.setImporteFinalAbonado(0);
             rp.getCoche().setEstado(EstadoVehiculo.DISPONIBLE);
-            if (observaciones != null) rp.setObservaciones(observaciones);
+            
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -122,30 +124,29 @@ public class ReservaPedidoService {
         }
     }
 
+
     // ─── EDITAR (admin puede tocar importe y observaciones) ───
     
-    public void editar(int id, double importeSenal, String observaciones) {
+    public void editar(int id, String observaciones) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
             ReservaPedido rp = em.find(ReservaPedido.class, id);
             
-            if (rp == null) throw new IllegalArgumentException("Pedido no encontrado.");
-            if (importeSenal > rp.getImporteTotal())
-                throw new IllegalArgumentException("La señal no puede superar el importe total.");
-            
-            rp.setImporteSenal(importeSenal);
+            if (rp == null) {
+                throw new IllegalArgumentException("Pedido no encontrado.");
+            }
+
             rp.setObservaciones(observaciones);
             
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException("Error al actualizar las observaciones: " + e.getMessage(), e);
         } finally {
             em.close();
         }
     }
-
     
 
     // ─── LISTAR (admin) ───
@@ -166,8 +167,19 @@ public class ReservaPedidoService {
         return ReservaPedidoDAO.getInstance().contarPorUsuario(idUsuario);
     }
 
+    
     // ─── DETALLE ───
     public ReservaPedido obtenerPorId(int id) {
-        return ReservaPedidoDAO.getInstance().obtenerPorId(id);
+        // pedimos todo a la base de datos y luego limpiamos datos sensibles para evitar fugas de información
+        ReservaPedido rp = ReservaPedidoDAO.getInstance().obtenerPorId(id);
+
+     
+        if (rp != null && rp.getUsuario() != null) {
+            rp.getUsuario().setPassword(null);     
+            rp.getUsuario().setConsultas(null);      
+            rp.getUsuario().setReservasPedido(null); 
+        }
+
+        return rp;
     }
 }

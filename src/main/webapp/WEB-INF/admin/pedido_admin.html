@@ -16,10 +16,18 @@
     </div>
 	
 	
+    
     <div class="search-form">
-        <input type="text" id="inputBusqueda" placeholder="id, estado, email del cliente...">
-        <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
-    </div>
+    <select id="selectEstado" style="padding: 8px; border-radius: 8px; border: 1px solid #ccc;">
+        <option value="">Todos los estados</option>
+        <option value="PENDIENTE">Pendiente</option>
+        <option value="ABONADO">Abonado</option>
+        <option value="CANCELADO">Cancelado</option>
+        <option value="EXPIRADO">Expirado</option>
+    </select>
+    <input type="text" id="inputBusqueda" placeholder="id, email, marca...">
+    <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
+</div>
 
     <div class="table-container">
         <table>
@@ -74,9 +82,15 @@
 	        sessionStorage.setItem("estado_gestion_pedidos", JSON.stringify(estado));
 	        timer = setTimeout(cargarPedidos, 400);
 	    });
+	    
+	    document.getElementById("selectEstado").addEventListener("change", () => {
+	        estado.pagina = 1;
+	        cargarPedidos();
+	    });
 
 	    document.getElementById("btnLimpiar").onclick = () => {
 	        document.getElementById("inputBusqueda").value = "";
+	        document.getElementById("selectEstado").value = "";
 	        estado.busqueda = "";
 	        estado.pagina = 1;
 	        sessionStorage.setItem("estado_gestion_pedidos", JSON.stringify(estado));
@@ -87,9 +101,8 @@
 	async function cargarPedidos() {
 	    setLoading(8); 
 	    try {
-	
-	        const res = await fetch(`Pedido_Sv?accion=listar&pagina=${estado.pagina}&busqueda=${encodeURIComponent(estado.busqueda)}`);
-	   
+	    	const estadoSelect = document.getElementById("selectEstado").value;
+	        const res = await fetch(`Pedido_Sv?accion=listar&pagina=${estado.pagina}&busqueda=${encodeURIComponent(estado.busqueda)}&estado=${estadoSelect}`);
 	        if (res.status === 401 || res.status === 403) {
 	            window.location.href = "login.html";
 	            return;
@@ -116,9 +129,10 @@
 	    const tbody = document.getElementById("cuerpoTabla");
 	    tbody.innerHTML = pedidos.map(p => {
 
-	        let claseEstado = "color: #ffc107;"; 
-	        if (p.estado === 'COMPLETADO') claseEstado = "color: #28a745;"; 
-	        if (p.estado === 'CANCELADO') claseEstado = "color: #dc3545;"; 
+	        let claseEstado = "color: #ffc107;"; // Por defecto, el estado "PENDIENTE" con color amarillo
+	        if (p.estado === 'CANCELADO') claseEstado = "color: #FF0000;"; // Nuevo estado "CANCELADO" con color rojo
+	        if (p.estado === 'EXPIRADO') claseEstado = "color: #800000;"; // Nuevo estado "EXPIRADO" con color naranja
+	        if (p.estado === 'ABONADO') claseEstado = "color: #28a745;"; // Nuevo estado "ABONADO" con color verde
 
 	        const fReserva = p.fechaReserva ? p.fechaReserva.replace("T", " ").substring(0, 16) : "-";
 	        const fExpira = p.fechaExpiracion ? p.fechaExpiracion.replace("T", " ").substring(0, 16) : "-";

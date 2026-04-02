@@ -20,7 +20,7 @@ import util.ServletUtil;
 public class Pedido_Sv extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    private static final int POR_PAGINA = 10;
+    private static final int POR_PAGINA = 6;
     private final ReservaPedidoService pedidoService = ReservaPedidoService.getInstance();
 
     @Override
@@ -84,32 +84,28 @@ public class Pedido_Sv extends HttpServlet {
     } 
    
    
-    private void ejecutarListar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String busqueda = request.getParameter("busqueda");
-            String estadoParam = request.getParameter("estado");
-            EstadoPedido estado = null;
-            if (estadoParam != null && !estadoParam.isBlank()) {
-                try { estado = EstadoPedido.valueOf(estadoParam); } catch (Exception ignored) {}
-            }
-
-            int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
-            if (pagina < 1) pagina = 1;
-
-            List<ReservaPedido> pedidos = pedidoService.listarAdmin(busqueda, estado, pagina, POR_PAGINA);
-            long total = pedidoService.contarAdmin(busqueda, estado);
-            int totalPaginas = (int) Math.ceil((double) total / POR_PAGINA);
-
-            ServletUtil.enviarRespuesta(response, Map.of(
-                "pedidos", pedidos,
-                "totalPaginas", totalPaginas,
-                "paginaActual", pagina
-            ));
-        } catch (Exception e) {
-            ServletUtil.manejarError(response, e);
-        }
-    }
+	
+    private void ejecutarListar(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
+		  try { 
+			  String busqueda = request.getParameter("busqueda"); 
+			  String estadoParam = request.getParameter("estado"); 
+			  EstadoPedido estado = null;
+			  
+			  if (estadoParam != null && !estadoParam.isBlank()) { 
+				  estado = EstadoPedido.desdeTexto(estadoParam); 
+			  }
+			  
+			  int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página"); 
+			  if (pagina < 1) pagina = 1;
+			  List<ReservaPedido> pedidos = pedidoService.listarAdmin(busqueda, estado, pagina, POR_PAGINA); 
+			  long total = pedidoService.contarAdmin(busqueda, estado); 
+			  int totalPaginas = (int) Math.ceil((double) total / POR_PAGINA);
+			  ServletUtil.enviarRespuesta(response, Map.of( "pedidos", pedidos, "totalPaginas", totalPaginas, "paginaActual", pagina )); 
+		 } catch (Exception e) { 
+			 ServletUtil.manejarError(response, e); 
+		 } 
+	}
+	  
 
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -121,41 +117,48 @@ public class Pedido_Sv extends HttpServlet {
             ServletUtil.manejarError(response, e);
         }
     }
-
     
     private void ejecutarCompletar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
+
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            String observaciones = ServletUtil.sanitizar(request.getParameter("observaciones"));
-            pedidoService.completar(id, observaciones);
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Pedido completado correctamente"));
+            pedidoService.completar(id); 
+            
+            ServletUtil.enviarRespuesta(response, Map.of(
+                "resultado", "OK", 
+                "mensaje", "Pedido completado correctamente"
+            ));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
-
-
+    
     private void ejecutarCancelar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            String observaciones = ServletUtil.sanitizar(request.getParameter("observaciones"));
-            pedidoService.cancelar(id, observaciones);
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Pedido cancelado correctamente"));
+
+            pedidoService.cancelar(id); 
+            
+            ServletUtil.enviarRespuesta(response, Map.of(
+                "resultado", "OK", 
+                "mensaje", "Pedido cancelado correctamente"
+            ));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
 
-    private void ejecutarEditar(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    
+    private void ejecutarEditar(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));
+
             String observaciones = ServletUtil.sanitizar(request.getParameter("observaciones"));
-            pedidoService.editar(id, importeSenal, observaciones);
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Pedido editado correctamente"));
+            pedidoService.editar(id, observaciones); 
+
+            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Observaciones actualizadas correctamente"));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
