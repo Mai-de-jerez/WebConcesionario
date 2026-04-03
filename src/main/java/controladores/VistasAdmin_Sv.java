@@ -49,8 +49,8 @@ public class VistasAdmin_Sv extends HttpServlet {
 	        case "detalle-reserva":
 	            request.getRequestDispatcher("/WEB-INF/admin/detalle_reserva_admin.html").forward(request, response);
 	            break;
-	        case "form-pedido":
-	            request.getRequestDispatcher("/WEB-INF/admin/form-pedido.html").forward(request, response);
+	        case "form-reserva":
+	            request.getRequestDispatcher("/WEB-INF/admin/form-reserva.html").forward(request, response);
 	            break;
 	        default:
 	            request.getRequestDispatcher("/WEB-INF/admin/admin-panel.html").forward(request, response);

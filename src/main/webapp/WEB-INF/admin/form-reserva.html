@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Reserva - Sistema de Gestión</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="tituloPagina">👤 Nueva Reserva </h1>
+        <div id="notificacion" class="message" style="display:none"></div>
+        
+        <form id="formReserva" novalidate>
+            <input type="hidden" id="idReserva" name="id">
+            <input type="hidden" id="accion-form" value="crear">
+            <input type="hidden" id="idCoche" name="idCoche">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="usuario">Nombre de Usuario: *</label>
+                    <input type="text" id="usuario" name="usuario" autocomplete="new-password" required placeholder="Ej: carmen_lucena">
+                    <span id="error-usuario" class="mensaje-error-campo"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico: *</label>
+                    <input type="email" id="email" name="email" required placeholder="ejemplo@correo.com">
+                    <span id="error-email" class="mensaje-error-campo"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ej: Carmen">
+                </div>
+
+                <div class="form-group">
+                    <label for="apellidos">Apellidos:</label>
+                    <input type="text" id="apellidos" name="apellidos" placeholder="Ej: Lucena García">
+                </div>
+
+                <div class="form-group">
+                    <label for="importeSenal">Importe de la Señal (€): *</label>
+                    <input type="number" id="importeSenal" name="importeSenal" step="0.01" required placeholder="0.00">
+                    <span id="error-importeSenal" class="mensaje-error-campo"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="metodoPago">Método de Pago: *</label>
+                    <select id="metodoPago" name="metodoPago" required>
+                        <option value="">-- Seleccionar --</option>
+                        <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                        <option value="PAYPAL">PayPal</option>
+                        <option value="TARJETA">Tarjeta de Crédito</option>
+                        <option value="BIZUM">Bizum</option>
+                    </select>
+                    <span id="error-metodoPago" class="mensaje-error-campo"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="tel" id="telefono" name="telefono" placeholder="Ej: 600123456">
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" id="direccion" name="direccion" placeholder="Calle, Número, Ciudad">
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-success">💾 Guardar Reserva</button>
+                <button type="reset" class="btn btn-secondary">🔄 Limpiar</button>
+                <a href="admin?vista=coches" class="btn btn-back">❌ Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("formReserva");
+
+        configurarLimpiezaErrores("#formReserva");
+
+        const params = new URLSearchParams(window.location.search);
+        const idCocheUrl = params.get("idCoche");
+        
+        if (idCocheUrl) {
+            document.getElementById("idCoche").value = idCocheUrl;
+        } else {
+            setError("No hay coche seleccionado. Vuelve atrás y selecciona uno.");
+            document.querySelector(".btn-success").disabled = true;
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            limpiarPantallaErrores();
+
+            let hayErrores = false;
+
+            const camposObligatorios = [
+                { id: "usuario", msg: "El nombre de usuario es obligatorio" },
+                { id: "email", msg: "El correo es obligatorio" },
+                { id: "importeSenal", msg: "Debes indicar el importe de la señal" },
+                { id: "metodoPago", msg: "Selecciona un método de pago" }
+            ];
+
+            camposObligatorios.forEach(campo => {
+                const el = document.getElementById(campo.id);
+                if (!el.value || el.value.trim() === "") {
+                    mostrarErrorEnCampo(campo.id, campo.msg);
+                    hayErrores = true;
+                }
+            });
+
+            if (hayErrores) {
+                setError("Por favor, rellena los campos obligatorios (*)");
+                return;
+            }
+
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+                console.log("FORM DATA →", key, "=", value);
+            }
+            const urlDestino = `Reserva_Sv?accion=crear`;
+
+            try {
+                const res = await fetch(urlDestino, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+
+                if (!res.ok) throw new Error("Error en la respuesta del servidor");
+
+                const data = await res.json();
+
+                if (data.resultado === "OK") {
+                    mostrarMensaje(data.mensaje, "success");
+                    setTimeout(() => {
+                        window.location.href = "admin?vista=coches";
+                    }, 2000);
+                } else {
+                    setError(data.mensaje);
+                    // Si el error viene de base de datos por email repetido
+                    if(data.mensaje.toLowerCase().includes("email")) {
+                        mostrarErrorEnCampo("email", "Este email ya existe");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                setError("No se ha podido conectar con el servidor. Inténtalo de nuevo.");
+            }
+        };
+    });
+    </script>
+</body>
+</html>

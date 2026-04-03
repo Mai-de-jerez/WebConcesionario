@@ -36,11 +36,13 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="form-buttons" style="justify-content: flex-start; margin-top: 25px; gap: 10px; display: flex;">
-                        <a id="link-editar" href="#" class="btn btn-primary">✏️ Editar Vehículo</a>
-                        <a href="admin?vista=coches" class="btn btn-back">Volver al Panel</a>
-                    </div>                                 
+                                                    
                 </div>
+                <div class="form-buttons" style="display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%; margin-top: 30px;">
+                    <a id="link-editar" href="#" class="btn btn-primary">✏️ Editar Vehículo</a>
+                    <a id="link-reservar" href="#" class="btn btn-success">📅 Reservar</a>
+                    <a href="admin?vista=coches" class="btn btn-back">Volver al Panel</a>
+                </div> 
             </div>
         </div>
     </main>
@@ -66,6 +68,7 @@
             document.getElementById("val-estado").textContent = c.estado;
             document.getElementById("val-desc").textContent = c.descripcion || "Sin descripción.";
             document.getElementById("link-editar").href = `admin?vista=form-vehiculo&id=${c.id}`;
+            document.getElementById("link-reservar").href = `admin?vista=form-reserva&idCoche=${c.id}`;
         });
     </script>
 </body>

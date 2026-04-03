@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 public class ReservaService {
 
     private static ReservaService instance = null;
@@ -52,6 +54,59 @@ public class ReservaService {
             em.close();
         }
     }
+
+    // ─── CREAR (cliente nuevo el admin en la tienda) ───
+    public void crearConNuevoUsuario(Usuario nuevoCliente, int idCoche, double importeParaVenta, MetodoPago metodo) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            // usuario
+            nuevoCliente.setRol(Rol.CLIENTE); 
+            String passPlano = UUID.randomUUID().toString().substring(0, 8);
+            nuevoCliente.setPassword(BCrypt.hashpw(passPlano, BCrypt.gensalt()));
+            em.persist(nuevoCliente); 
+
+            // coche
+            Coche cocheDB = em.find(Coche.class, idCoche, LockModeType.PESSIMISTIC_WRITE);
+            if (cocheDB == null || cocheDB.getEstado() != EstadoVehiculo.DISPONIBLE) {
+                throw new IllegalStateException("Coche no disponible.");
+            }
+
+            // reserva 
+            Reserva r = new Reserva();
+            r.setUsuario(nuevoCliente);
+            r.setCoche(cocheDB);
+            r.setMetodoPago(metodo); 
+            r.setTransaccionId(UUID.randomUUID().toString()); 
+            r.setEstado(EstadoReserva.ACTIVA);
+
+            // en ventas
+            Venta v = new Venta();
+            v.setReserva(r);
+            v.setUsuario(nuevoCliente);
+            v.setCoche(cocheDB);
+            v.setImporteAbonado(importeParaVenta); 
+            v.setEstado(EstadoVenta.PENDIENTE); 
+            v.setTransaccionId(r.getTransaccionId()); 
+
+            r.setVenta(v); 
+            cocheDB.setEstado(EstadoVehiculo.RESERVADO);
+
+            em.persist(r);
+            em.persist(v); 
+            
+            em.getTransaction().commit(); 
+            
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace(); 
+            throw new RuntimeException("Fallo en la transacción: " + e.getMessage());
+        } finally {
+            em.close();
+        }
+    }
+
     
     
     // ─── COMPLETAR (admin cobra en tienda) ───

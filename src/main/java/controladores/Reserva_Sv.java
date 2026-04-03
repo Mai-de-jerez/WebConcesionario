@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
+import modelo.MetodoPago;
 import modelo.Reserva;
 import modelo.Usuario;
 import servicio.ReservaService;
@@ -49,7 +50,9 @@ public class Reserva_Sv extends HttpServlet {
         }
 
         String accion = request.getParameter("accion");
-        if ("completar".equals(accion)) {
+        if ("crear".equals(accion)) { 
+            ejecutarCrear(request, response);
+        } else if ("completar".equals(accion)) {
             ejecutarCompletar(request, response);
         } else if ("cancelar".equals(accion)) {
             ejecutarCancelar(request, response);
@@ -93,6 +96,40 @@ public class Reserva_Sv extends HttpServlet {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
             Reserva rp = reservaService.obtenerPorId(id);
             ServletUtil.enviarRespuesta(response, rp);
+        } catch (Exception e) {
+            ServletUtil.manejarError(response, e);
+        }
+    }
+    
+    
+    private void ejecutarCrear(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException {
+        try {
+            // recogemos los datos básicos
+            int idCoche = ServletUtil.parsearInt(request.getParameter("idCoche"), "ID del coche");
+            double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));           
+            // recogemos el método de pago del form
+            String metodoStr = request.getParameter("metodoPago");
+            System.out.println("DEBUG metodoPago recibido: [" + metodoStr + "]");
+            MetodoPago metodo = MetodoPago.valueOf(metodoStr.toUpperCase());
+            // Usamos el constructor vacío pero rellenamos TODO para que no haya sustos
+            Usuario nuevoCliente = new Usuario();
+            nuevoCliente.setUsuario(request.getParameter("usuario"));
+            nuevoCliente.setEmail(request.getParameter("email"));
+            nuevoCliente.setNombre(request.getParameter("nombre"));
+            nuevoCliente.setApellidos(request.getParameter("apellidos"));
+            nuevoCliente.setTelefono(request.getParameter("telefono"));
+            nuevoCliente.setDireccion(request.getParameter("direccion"));
+
+            reservaService.crearConNuevoUsuario(nuevoCliente, idCoche, importeSenal, metodo);
+
+            ServletUtil.enviarRespuesta(response, Map.of(
+                "resultado", "OK",
+                "mensaje", "Cliente registrado y reserva creada correctamente."
+            ));
+            
+        } catch (IllegalArgumentException e) {
+            ServletUtil.manejarError(response, new Exception("Método de pago no válido o datos incorrectos."));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
