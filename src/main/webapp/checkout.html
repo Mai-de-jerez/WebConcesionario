@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | Concesionario May</title>
+    <title>Reservar Vehículo | Concesionario May</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="home-body">
@@ -164,7 +164,7 @@
                     const res = await fetch("Tienda_Sv", {
                         method: "POST",
                         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: `accion=reservar&idCoche=${idCoche}&importeSenal=500`
+                        body: `accion=reservar&idCoche=${idCoche}&importeSenal=500&metodoPago=${metodo}`
                     });
                     const data = await res.json();
 

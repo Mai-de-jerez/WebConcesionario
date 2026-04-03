@@ -53,7 +53,7 @@ public class Coche implements Serializable {
 
     
     @OneToMany(mappedBy = "coche", cascade = CascadeType.ALL, orphanRemoval = true)
-    private transient List<ReservaPedido> reservasPedido;
+    private transient List<Reserva> reservasPedido;
     
     // CONSTRUCTOR VACÍO: Obligatorio para JPA
     public Coche() {
@@ -283,8 +283,8 @@ public class Coche implements Serializable {
 	}
     
     
-    public List<ReservaPedido> getReservasPedido() { return reservasPedido; }
-    public void setReservasPedido(List<ReservaPedido> reservasPedido) { this.reservasPedido = reservasPedido; }
+    public List<Reserva> getReservasPedido() { return reservasPedido; }
+    public void setReservasPedido(List<Reserva> reservasPedido) { this.reservasPedido = reservasPedido; }
 	
 	// Métodos personales
 	

@@ -5,9 +5,12 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
-import modelo.ReservaPedido;
-import modelo.EstadoPedido;
+import modelo.Reserva;
+import modelo.Venta;
+import modelo.EstadoReserva;
 import modelo.EstadoVehiculo;
+import modelo.EstadoVenta;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -32,23 +35,35 @@ public class ExpiracionScheduler implements ServletContextListener {
         try {
             em.getTransaction().begin();
 
-            List<ReservaPedido> vencidos = em.createQuery(
-                "SELECT rp FROM ReservaPedido rp JOIN FETCH rp.coche " +
-                "WHERE rp.estado = :estado " +
-                "AND rp.fechaExpiracion < :ahora", ReservaPedido.class)
-                .setParameter("estado", EstadoPedido.PENDIENTE)
+            List<Reserva> vencidos = em.createQuery(
+            	"SELECT r FROM Reserva r " +
+                "JOIN FETCH r.coche " +
+                "LEFT JOIN FETCH r.venta " +
+                "WHERE r.estado = :estado " +
+                "AND r.fechaExpiracion < :ahora", Reserva.class)
+                .setParameter("estado", EstadoReserva.ACTIVA)
                 .setParameter("ahora", LocalDateTime.now())
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE) 
                 .getResultList();
 
-            for (ReservaPedido rp : vencidos) {
-                rp.setEstado(EstadoPedido.EXPIRADO);
+            for (Reserva r : vencidos) {
+                // expiramos la reserva
+                r.setEstado(EstadoReserva.EXPIRADA);
+                r.setObservaciones("Reserva expirada automáticamente. El cliente no completó el pago.");
 
-                rp.setImporteFinalAbonado(rp.getImporteSenal());
+                // castigo por no pagar (a pagar, a pagar!)
+                Venta v = r.getVenta(); 
+                if (v != null) {                   
+                    // penalizamos esa venta
+                    v.setEstado(EstadoVenta.PENALIZADA);                  
+                    // La fecha de pago de la venta la igualamos a la de la reserva
+                    v.setFechaPago(r.getFechaReserva());
+                }
 
-                rp.getCoche().setEstado(EstadoVehiculo.DISPONIBLE);
-                
-                rp.setObservaciones("Reserva expirada automáticamente por falta de pago.");
+                // liberamos el auto
+                if (r.getCoche() != null) {
+                    r.getCoche().setEstado(EstadoVehiculo.DISPONIBLE);
+                }
             }
 
             em.getTransaction().commit();

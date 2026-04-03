@@ -17,10 +17,10 @@ public class Usuario implements Serializable {
 
     @Column(unique = true, nullable = false)
     private String usuario;
-
     private String nombre;
     private String apellidos;
     private String password;
+    
 
     @Enumerated(EnumType.STRING) 
     private Rol rol; 
@@ -40,7 +40,7 @@ public class Usuario implements Serializable {
     
     // Relación con ReservaPedido
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private transient List<ReservaPedido> reservasPedido;
+    private transient List<Reserva> reservas;
     
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     private transient List<Consultas> consultas;
@@ -228,8 +228,8 @@ public class Usuario implements Serializable {
 	}
 
 
-    public List<ReservaPedido> getReservasPedido() { return reservasPedido; }
-    public void setReservasPedido(List<ReservaPedido> reservasPedido) { this.reservasPedido = reservasPedido; }
+    public List<Reserva> getReservas() { return reservas; }
+    public void setReservas(List<Reserva> reservas) { this.reservas = reservas; }
     
 	/**
 	 * @return el serialversionuid

@@ -10,7 +10,8 @@
         <class>modelo.Coche</class>
         <class>modelo.Usuario</class>
         <class>modelo.Consultas</class>
-        <class>modelo.ReservaPedido</class>
+        <class>modelo.Reserva</class>
+        <class>modelo.Venta</class>
         
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://127.0.0.1:3306/web_concesionario"/>
@@ -27,10 +28,12 @@
             <property name="hibernate.hikari.connectionTimeout" value="20000" />
             <property name="hibernate.hikari.idleTimeout" value="300000" />
 
-            <property name="hibernate.hbm2ddl.auto" value="none"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
             
-            <property name="hibernate.show_sql" value="false"/>
-            <property name="hibernate.format_sql" value="false"/>
+    
+            
+            <property name="hibernate.show_sql" value="true"/>
+			<property name="hibernate.format_sql" value="true"/>
         </properties>
         
         

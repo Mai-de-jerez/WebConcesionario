@@ -6,48 +6,59 @@ import modelo.*;
 import util.JPAUtil;
 import java.util.List;
 
-public class ReservaPedidoDAO {
+public class ReservaDAO {
 
-    private static ReservaPedidoDAO instance = null;
-    private ReservaPedidoDAO() {}
-    public static ReservaPedidoDAO getInstance() {
-        if (instance == null) instance = new ReservaPedidoDAO();
+    private static ReservaDAO instance = null;
+    private ReservaDAO() {}
+    public static ReservaDAO getInstance() {
+        if (instance == null) instance = new ReservaDAO();
         return instance;
     }
   
 
     // ─── OBTENER POR ID ───
-    public ReservaPedido obtenerPorId(int id) {
+    
+    public Reserva obtenerPorId(int id) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
-            return em.find(ReservaPedido.class, id);
+            String jpql = "SELECT r FROM Reserva r " +
+                          "LEFT JOIN FETCH r.usuario " +
+                          "LEFT JOIN FETCH r.coche " +
+                          "LEFT JOIN FETCH r.venta " + 
+                          "WHERE r.id = :id";
+            
+            return em.createQuery(jpql, Reserva.class)
+                     .setParameter("id", id)
+                     .getSingleResult();
+        } catch (Exception e) {
+            return null; 
         } finally {
             em.close();
         }
     }
 
 
-    // ─── LISTAR TODOS (admin) con búsqueda y paginación ───
-    
-    public List<ReservaPedido> listarAdmin(String busqueda, EstadoPedido estado, int pagina, int porPagina) {
+    // --- LISTAR TODOS (admin) ---
+    public List<Reserva> listarAdmin(String busqueda, EstadoReserva estado, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             boolean esSoloNumero = (busqueda != null && busqueda.matches("\\d+"));
             
-            String jpql = "SELECT rp FROM ReservaPedido rp JOIN FETCH rp.coche WHERE 1=1";
+            // Añadimos FETCH r.usuario porque ya no hay email en Reserva
+            String jpql = "SELECT r FROM Reserva r JOIN FETCH r.coche JOIN FETCH r.usuario WHERE 1=1";
 
             if (busqueda != null && !busqueda.isBlank()) {
                 if (esSoloNumero) {
-                    jpql += " AND rp.id = :idExacto";
+                    jpql += " AND r.id = :idExacto";
                 } else {
-                    jpql += " AND (LOWER(rp.emailContacto) LIKE :b OR LOWER(rp.coche.marca) LIKE :b OR LOWER(rp.coche.modelo) LIKE :b)";
+                    jpql += " AND (LOWER(r.usuario.email) LIKE :b OR LOWER(r.coche.marca) LIKE :b OR LOWER(r.coche.modelo) LIKE :b)";
                 }
             }
 
-            if (estado != null) jpql += " AND rp.estado = :estado";
-            jpql += " ORDER BY rp.fechaReserva DESC";
+            if (estado != null) jpql += " AND r.estado = :estado";
+            jpql += " ORDER BY r.fechaReserva DESC";
 
-            TypedQuery<ReservaPedido> query = em.createQuery(jpql, ReservaPedido.class);
+            TypedQuery<Reserva> query = em.createQuery(jpql, Reserva.class);
 
             if (busqueda != null && !busqueda.isBlank()) {
                 if (esSoloNumero) {
@@ -66,22 +77,23 @@ public class ReservaPedidoDAO {
         }
     }
     
-    public long contarAdmin(String busqueda, EstadoPedido estado) {
+    //  ─── CONTAR TODOS (admin) con búsqueda y filtro de estado ───
+    public long contarAdmin(String busqueda, EstadoReserva estado) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             boolean esSoloNumero = (busqueda != null && busqueda.matches("\\d+"));
             
-            String jpql = "SELECT COUNT(rp) FROM ReservaPedido rp WHERE 1=1";
+            String jpql = "SELECT COUNT(r) FROM Reserva r WHERE 1=1";
             
             if (busqueda != null && !busqueda.isBlank()) {
                 if (esSoloNumero) {
-                    jpql += " AND rp.id = :idExacto";
+                    jpql += " AND r.id = :idExacto";
                 } else {
-                    jpql += " AND (LOWER(rp.emailContacto) LIKE :b OR LOWER(rp.coche.marca) LIKE :b OR LOWER(rp.coche.modelo) LIKE :b)";
+                    jpql += " AND (LOWER(r.usuario.email) LIKE :b OR LOWER(r.coche.marca) LIKE :b OR LOWER(r.coche.modelo) LIKE :b)";
                 }
             }
             
-            if (estado != null) jpql += " AND rp.estado = :estado";
+            if (estado != null) jpql += " AND r.estado = :estado";
 
             TypedQuery<Long> query = em.createQuery(jpql, Long.class);
             
@@ -101,13 +113,14 @@ public class ReservaPedidoDAO {
         }
     }
 
+
     // ─── LISTAR POR USUARIO (cliente) ───
-    public List<ReservaPedido> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
+    public List<Reserva> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             return em.createQuery(
-                "SELECT rp FROM ReservaPedido rp WHERE rp.usuario.id_usuario = :id ORDER BY rp.fechaReserva DESC",
-                ReservaPedido.class)
+                "SELECT r FROM Reserva r WHERE r.usuario.id_usuario = :id ORDER BY r.fechaReserva DESC",
+                Reserva.class)
                 .setParameter("id", idUsuario)
                 .setFirstResult((pagina - 1) * porPagina)
                 .setMaxResults(porPagina)
@@ -122,7 +135,7 @@ public class ReservaPedidoDAO {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             return em.createQuery(
-                "SELECT COUNT(rp) FROM ReservaPedido rp WHERE rp.usuario.id_usuario = :id", Long.class)
+                "SELECT COUNT(r) FROM Reserva r WHERE r.usuario.id_usuario = :id", Long.class)
                 .setParameter("id", idUsuario)
                 .getSingleResult();
         } finally {

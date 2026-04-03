@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle Pedido</title>
+    <title>Detalle de la Reserva</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="home-body">
     <main class="content-area">
         <div class="container" style="max-width: 900px;">
             <h2 style="color: #764ba2; margin-bottom: 20px;">
-                📄 Detalle del Pedido #<span id="idPedido"></span>
+                📄 Detalle de la Reserva #<span id="idPedido"></span>
             </h2>
 
             <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: start;">
@@ -20,7 +20,7 @@
                     <div class="feature-card" style="padding: 10px; cursor: default;">
                         <img id="imgCoche" src="img/sin-foto.png" alt="Imagen del vehículo"
                              style="width:100%; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); min-height: 200px; object-fit: cover;">
-                        <p style="text-align: center; margin-top: 10px; color: #666; font-style: italic;">Vehículo asociado al pedido</p>
+                        <p style="text-align: center; margin-top: 10px; color: #666; font-style: italic;">Vehículo asociado a la Reserva</p>
                     </div>
                 </div>
 
@@ -34,18 +34,18 @@
                                     <td><span id="estado"></span></td>
                                 </tr>
                                 <tr><td colspan="2" style="background-color: #eee; height: 1px; padding: 0;"></td></tr>
+                                <tr><td><strong>ID Usuario</strong></td><td id="idUsuario"></td></tr>
+								<tr><td><strong>ID Coche</strong></td><td id="idCoche"></td></tr>
                                 <tr><td><strong>Email contacto</strong></td><td id="emailContacto"></td></tr>
                                 <tr><td><strong>Cliente</strong></td><td id="nombreCliente"></td></tr>
                                 <tr><td><strong>Teléfono</strong></td><td id="telefono"></td></tr>
                                 <tr><td><strong>Vehículo</strong></td><td id="vehiculo"></td></tr>
+                                <tr><td><strong>Método de Pago</strong></td><td id="metodoPago"></td></tr>
                                 <tr><td colspan="2" style="background-color: #eee; height: 1px; padding: 0;"></td></tr>
-                                <tr><td><strong>Señal abonada</strong></td><td id="importeSenal" style="font-size: 1.2em; font-weight: bold; color: #764ba2;"></td></tr>
-                                <tr><td><strong>Precio total coche</strong></td><td id="importeTotal"></td></tr>                                                    
-                                <tr><td><strong>Importe Final Abonado</strong></td><td id="importeFinalAbonado"></td></tr>                              
+                                <tr><td><strong>Importe abonado</strong></td><td id="importeSenal" style="font-size: 1.2em; font-weight: bold; color: #764ba2;"></td></tr>                                                                                  
                                 <tr><td colspan="2" style="background-color: #eee; height: 1px; padding: 0;"></td></tr>
                                 <tr><td><strong>Fecha Reserva</strong></td><td id="fechaReserva"></td></tr>
-                                <tr><td><strong>Fecha Expiración</strong></td><td id="fechaExpiracion"></td></tr>
-                                <tr><td><strong>Fecha Pago</strong></td><td id="fechaPago"></td></tr>
+                                <tr><td><strong>Fecha Expiración</strong></td><td id="fechaExpiracion"></td></tr>                        
                                 <tr><td><strong>ID Transacción</strong></td><td id="transaccionId" style="font-family: monospace; font-size: 0.85em;"></td></tr>
                                 <tr><td><strong>Observaciones</strong></td><td id="observaciones" style="font-style: italic; color: #555;"></td>
                                 </tr>
@@ -55,13 +55,13 @@
             	</div>        
                 <!-- Botones de accion -->
                 <div class="form-buttons" style="display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%; margin-top: 30px;">
-                    <a href="admin?vista=pedidos" class="btn btn-back">⬅️ Volver a la Lista</a>
+                    <a href="admin?vista=reservas" class="btn btn-back">⬅️ Volver a la Lista</a>
                     
                     <a href="#" id="linkCompletar" onclick="accion('completar'); return false;" 
 				       class="btn btn-success" style="display: none;">✅ Completar Pago</a>
 				
 				    <a href="#" id="linkCancelar" onclick="accion('cancelar'); return false;" 
-				       class="btn btn-secondary" style="display: none;">❌ Cancelar Pedido</a>
+				       class="btn btn-secondary" style="display: none;">❌ Cancelar Reserva</a>
                 </div>            
         	</div>
         	</div>
@@ -78,23 +78,23 @@
 
         async function cargarDetalle() {
             try {
-                const res = await fetch(`Pedido_Sv?accion=detalle&id=${id}`);
+                const res = await fetch(`Reserva_Sv?accion=detalle&id=${id}`);
                 const p = await res.json();
 
                 document.getElementById("idPedido").textContent = p.id;
                 document.getElementById("imgCoche").src = `img/${p.coche?.imagen || "sin-foto.png"}`;
                 document.getElementById("vehiculo").textContent = `${p.coche?.marca} ${p.coche?.modelo}`;
-                document.getElementById("emailContacto").textContent = p.emailContacto || "---";
+                document.getElementById("emailContacto").textContent = p.usuario ? p.usuario.email : "Sin email";
                 document.getElementById("nombreCliente").textContent = p.usuario
                     ? `${p.usuario.nombre} ${p.usuario.apellidos}`
                     : "Sin cuenta registrada";
+                document.getElementById("idUsuario").textContent = p.usuario ? `${p.usuario.id_usuario}` : "N/A";
+                document.getElementById("idCoche").textContent = p.coche ? `${p.coche.id}` : "N/A";
+                document.getElementById("metodoPago").textContent = p.metodoPago || "No especificado";
                 document.getElementById("telefono").textContent = p.usuario?.telefono || "No facilitado";
-                document.getElementById("importeSenal").textContent = `${p.importeSenal?.toFixed(2)} €`;
-                document.getElementById("importeTotal").textContent = `${p.importeTotal?.toFixed(2)} €`;
-                document.getElementById("importeFinalAbonado").textContent = `${p.importeFinalAbonado?.toFixed(2)} €`;
+                document.getElementById("importeSenal").textContent = `${p.venta.importeAbonado?.toFixed(2)} €`;
                 document.getElementById("fechaReserva").textContent = formatFecha(p.fechaReserva);
                 document.getElementById("fechaExpiracion").textContent = formatFecha(p.fechaExpiracion);
-                document.getElementById("fechaPago").textContent = p.fechaPago ? formatFecha(p.fechaPago) : "---";
                 document.getElementById("transaccionId").textContent = p.transaccionId || "N/A";
                 document.getElementById("observaciones").textContent = p.observaciones || "Sin notas adicionales.";
 
@@ -104,15 +104,15 @@
                
              	// Definimos el color según tu lista de pedidos
                 let estiloEstado = "color: #ffc107;"; // Por defecto PENDIENTE (Amarillo)
-                if (p.estado === 'CANCELADO') estiloEstado = "color: #FF0000;"; // Rojo
-                if (p.estado === 'EXPIRADO') estiloEstado = "color: #800000;";  // Granate
-                if (p.estado === 'ABONADO') estiloEstado = "color: #28a745;";   // Verde
+                if (p.estado === 'CANCELADA') estiloEstado = "color: #FF0000;"; // Rojo
+                if (p.estado === 'EXPIRADA') estiloEstado = "color: #800000;";  // Granate
+                if (p.estado === 'FINALIZADA') estiloEstado = "color: #28a745;";   // Verde
 
                 // Aplicamos el estilo directamente al elemento
                 estadoEl.style = estiloEstado + " font-weight: bold;";
 
                 // Mostrar acciones solo si PENDIENTE
-                if (p.estado === "PENDIENTE") {
+                if (p.estado === "ACTIVA") {
                     document.getElementById("linkCompletar").style.display = "inline-block";
                     document.getElementById("linkCancelar").style.display = "inline-block";
                 }
@@ -129,7 +129,7 @@
             let body = `accion=${tipo}&id=${id}`;
 
             try {
-                const res = await fetch("Pedido_Sv", {
+                const res = await fetch("Reserva_Sv", {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: body 
@@ -150,6 +150,7 @@
             if (!fecha) return "---";
             return new Date(fecha).toLocaleString("es-ES");
         }
+        
 
     </script>
 </body>

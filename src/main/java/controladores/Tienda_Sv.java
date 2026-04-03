@@ -10,8 +10,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import modelo.Coche;
+import modelo.MetodoPago;
 import modelo.Usuario;
-import servicio.ReservaPedidoService;
+import servicio.ReservaService;
 import servicio.CocheService;
 import util.ServletUtil;
 
@@ -21,7 +22,7 @@ public class Tienda_Sv extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final int POR_PAGINA = 8;
     private final CocheService cocheService = CocheService.getInstance();
-    private final ReservaPedidoService pedidoService = ReservaPedidoService.getInstance();
+    private final ReservaService reservaService = ReservaService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -123,10 +124,11 @@ public class Tienda_Sv extends HttpServlet {
         request.getRequestDispatcher("confirmacion_reserva.html").forward(request, response);
     }
 
+    
     private void ejecutarReservar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
-            if (!esClienteLogueado(request)) {
+        	if (!esClienteLogueado(request)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Debes iniciar sesión para reservar"));
                 return;
@@ -135,17 +137,19 @@ public class Tienda_Sv extends HttpServlet {
             Usuario user = obtenerUsuario(request);
             int idCoche = ServletUtil.parsearInt(request.getParameter("idCoche"), "ID del coche");
             double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));
+     
+            String metodoPagoStr = request.getParameter("metodoPago"); 
 
-            pedidoService.crear(user, idCoche, importeSenal);
+            MetodoPago metodoPago = MetodoPago.valueOf(metodoPagoStr.toUpperCase());
+
+            reservaService.crear(user, idCoche, importeSenal, metodoPago);
 
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Reserva realizada correctamente"));
                        
-        } catch (IllegalStateException | IllegalArgumentException e) {
-
+        } catch (IllegalArgumentException e) {
+            
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST); 
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", e.getMessage()));
-            
-            
+            ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Método de pago no válido"));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }

@@ -11,9 +11,9 @@ import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import modelo.ReservaPedido;
+import modelo.Reserva;
 import modelo.Usuario;
-import servicio.ReservaPedidoService;
+import servicio.ReservaService;
 import servicio.UsuarioService;
 import util.ServletUtil;
 
@@ -27,7 +27,7 @@ public class Cliente_Sv extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final int POR_PAGINA = 10;
-    private final ReservaPedidoService pedidoService = ReservaPedidoService.getInstance();
+    private final ReservaService pedidoService = ReservaService.getInstance();
     private final UsuarioService usuarioService = new UsuarioService();
 
     @Override
@@ -73,7 +73,7 @@ public class Cliente_Sv extends HttpServlet {
             int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
             if (pagina < 1) pagina = 1;
 
-            List<ReservaPedido> pedidos = pedidoService.listarPorUsuario(user.getId_usuario(), pagina, POR_PAGINA);
+            List<Reserva> pedidos = pedidoService.listarPorUsuario(user.getId_usuario(), pagina, POR_PAGINA);
             long total = pedidoService.contarPorUsuario(user.getId_usuario());
             int totalPaginas = (int) Math.ceil((double) total / POR_PAGINA);
 
@@ -92,7 +92,7 @@ public class Cliente_Sv extends HttpServlet {
         try {
             Usuario user = obtenerUsuario(request);
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            ReservaPedido rp = pedidoService.obtenerPorId(id);
+            Reserva rp = pedidoService.obtenerPorId(id);
 
             // Seguridad: el cliente solo puede ver sus propios pedidos
             if (rp == null || rp.getUsuario() == null || rp.getUsuario().getId_usuario() != user.getId_usuario()) {
