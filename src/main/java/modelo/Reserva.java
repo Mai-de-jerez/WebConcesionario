@@ -20,10 +20,10 @@ public class Reserva implements Serializable {
 
     // ─── CLIENTE ───
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = true) 
+    @JoinColumn(name = "id_usuario", nullable = false) 
     private Usuario usuario;
 
- // ─── COCHE ───
+    // ─── COCHE ───
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "id_coche", nullable = false)
     private Coche coche;
@@ -67,7 +67,7 @@ public class Reserva implements Serializable {
     }
 
 
-    // ─── LIFECYCLE ───
+    // ─── GENERAMOS FECHAS DE RESERVA Y EXPIRACIÓN AUTOMÁTICAMENTE ───
     @PrePersist
     public void prePersist() {
         this.fechaReserva = LocalDateTime.now();
@@ -79,7 +79,7 @@ public class Reserva implements Serializable {
         return estado == EstadoReserva.ACTIVA;
     }
 
-    public boolean iFinalizada() {
+    public boolean isFinalizada() {
         return estado == EstadoReserva.FINALIZADA;
     }
 

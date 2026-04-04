@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Reservas - Concesionario May</title>
+    <title>Gestión de Ventas - Concesionario May</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
 	
     <div class="header-actions">
-        <h1>🚗 Lista de Reservas</h1>
+        <h1>🚗 Lista de Ventas</h1>
         <div id="notificacion" class="message" style="display:none"></div>
-        <a href="admin?vista=coches" class="btn btn-success">➕ Nueva Reserva</a>
+        <a href="admin?vista=form-venta" class="btn btn-success">➕ Nueva Venta</a>
     </div>
 	
 	
@@ -20,12 +20,12 @@
     <div class="search-form">
     <select id="selectEstado" style="padding: 8px; border-radius: 8px; border: 1px solid #ccc;">
         <option value="">Todos los estados</option>
-        <option value="ACTIVA">Activa</option>
+        <option value="PENDIENTE">Pendiente</option>
         <option value="FINALIZADA">Finalizada</option>
-        <option value="CANCELADA">Cancelada</option>
-        <option value="EXPIRADA">Expirada</option>
+        <option value="PENALIZADA">Penalizada</option>
+        <option value="CANCELADA">Cancelada</option> 
     </select>
-    <input type="text" id="inputBusqueda" placeholder="id, email, marca...">
+    <input type="text" id="inputBusqueda" placeholder="id, email, marca del auto...">
     <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
 </div>
 
@@ -34,12 +34,12 @@
             <thead>
                 <tr>
                     <th>ID</th>                   
-                    <th>Fecha Reserva</th>
-                    <th>Fecha Expiración</th>
-                    <th>Estado de la Reserva</th>
+                    <th>Fecha Pago</th>
+                    <th>Cliente</th>
+                    <th>Estado de Venta</th>
                     <th>Marca</th>
                     <th>Modelo</th>
-                    <th>Email de Cliente</th>
+                    <th>Importe Abonado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -64,7 +64,7 @@
 	
 	document.addEventListener("DOMContentLoaded", () => {
 
-	    const estadoGuardado = sessionStorage.getItem("estado_gestion_reservas");
+	    const estadoGuardado = sessionStorage.getItem("estado_gestion_ventas");
 	    if (estadoGuardado) {
 	        const recuperado = JSON.parse(estadoGuardado);
 	        estado.pagina = recuperado.pagina;
@@ -72,20 +72,20 @@
 	        document.getElementById("inputBusqueda").value = estado.busqueda;
 	    }
 	    
-	    cargarReservas();
+	    cargarVentas();
 	
 	    let timer;
 	    document.getElementById("inputBusqueda").addEventListener("input", (e) => {
 	        clearTimeout(timer);
 	        estado.busqueda = e.target.value;
 	        estado.pagina = 1;
-	        sessionStorage.setItem("estado_gestion_reservas", JSON.stringify(estado));
-	        timer = setTimeout(cargarReservas, 400);
+	        sessionStorage.setItem("estado_gestion_ventas", JSON.stringify(estado));
+	        timer = setTimeout(cargarVentas, 400);
 	    });
 	    
 	    document.getElementById("selectEstado").addEventListener("change", () => {
 	        estado.pagina = 1;
-	        cargarReservas();
+	        cargarVentas();
 	    });
 
 	    document.getElementById("btnLimpiar").onclick = () => {
@@ -93,16 +93,16 @@
 	        document.getElementById("selectEstado").value = "";
 	        estado.busqueda = "";
 	        estado.pagina = 1;
-	        sessionStorage.setItem("estado_gestion_reservas", JSON.stringify(estado));
-	        cargarReservas();
+	        sessionStorage.setItem("estado_gestion_ventas", JSON.stringify(estado));
+	        cargarVentas();
 	    };
 	});
 	
-	async function cargarReservas() {
+	async function cargarVentas() {
 	    setLoading(8); 
 	    try {
 	    	const estadoSelect = document.getElementById("selectEstado").value;
-	        const res = await fetch(`Reserva_Sv?accion=listar&pagina=${estado.pagina}&busqueda=${encodeURIComponent(estado.busqueda)}&estado=${estadoSelect}`);
+	        const res = await fetch(`Venta_Sv?accion=listar&pagina=${estado.pagina}&busqueda=${encodeURIComponent(estado.busqueda)}&estado=${estadoSelect}`);
 	        if (res.status === 401 || res.status === 403) {
 	            window.location.href = "login.html";
 	            return;
@@ -110,44 +110,44 @@
 	
 	        const data = await res.json();
 	
-	        if (!data.reservas || data.reservas.length === 0) {
-	            setVacio("No hay reservas registradas con ese filtro", 8); 
+	        if (!data.ventas || data.ventas.length === 0) {
+	            setVacio("No hay ventas registradas con ese filtro", 8); 
 	            renderPaginacion(0);
 	            return;
 	        }
 	
-	        renderTabla(data.reservas);
+	        renderTabla(data.ventas);
 	        renderPaginacion(data.totalPaginas);
-	        sessionStorage.setItem("estado_gestion_reservas", JSON.stringify(estado));
+	        sessionStorage.setItem("estado_gestion_ventas", JSON.stringify(estado));
 	        
 	    } catch (err) {
-	        setError("Error al conectar con el servidor de pedidos");
+	        setError("Error al conectar con el servidor de ventas");
 	    }
 	}
 	
-	function renderTabla(reservas) {
+	function renderTabla(ventas) {
 	    const tbody = document.getElementById("cuerpoTabla");
-	    tbody.innerHTML = reservas.map(p => {
+	    tbody.innerHTML = ventas.map(v => {
 
-	        let claseEstado = "color: #ffc107;"; // Por defecto, el estado "ACTIVA" con color amarillo
-	        if (p.estado === 'CANCELADA') claseEstado = "color: #FF0000;"; // Nuevo estado "CANCELADO" con color rojo
-	        if (p.estado === 'EXPIRADA') claseEstado = "color: #800000;"; // Nuevo estado "EXPIRADO" con color PURPURA
-	        if (p.estado === 'FINALIZADA') claseEstado = "color: #28a745;"; // Nuevo estado "ABONADO" con color verde
+	        let claseEstado = "color: #ffc107;"; // Por defecto, el estado "PENDIENTE" con color amarillo
+	        if (v.estado === 'CANCELADA') claseEstado = "color: #FF0000;"; // Nuevo estado "CANCELADA" con color rojo
+	        if (v.estado === 'PENALIZADA') claseEstado = "color: #800000;"; // Nuevo estado "PENALIZADA" con color PURPURA
+	        if (v.estado === 'FINALIZADA') claseEstado = "color: #28a745;"; // Nuevo estado "FINALIZADA" con color verde
 
-	        const fReserva = p.fechaReserva ? p.fechaReserva.replace("T", " ").substring(0, 16) : "-";
-	        const fExpira = p.fechaExpiracion ? p.fechaExpiracion.replace("T", " ").substring(0, 16) : "-";
-	
+	        const fPago = v.fechaPago ? v.fechaPago.replace("T", " ").substring(0, 16) : "-";
+	        const nombreCompleto = v.usuario ? (v.usuario.nombre + " " + v.usuario.apellidos) : "Cliente no registrado";
+	        
 	        return `
 	            <tr>
-	                <td style="font-weight: bold; color: #764ba2;">#${p.id}</td>
-	                <td>${fReserva}</td>
-	                <td>${fExpira}</td>
-	                <td style="${claseEstado} font-weight: bold;">${p.estado}</td>
-	                <td>${p.coche.marca}</td> 
-	                <td>${p.coche.modelo}</td>
-	                <td>${p.usuario ? p.usuario.email : 'Sin usuario'}</td>
+	                <td style="font-weight: bold; color: #764ba2;">#${v.id}</td>
+	                <td>${fPago}</td>
+	                <td>${nombreCompleto}</td>
+	                <td style="${claseEstado} font-weight: bold;">${v.estado}</td>
+	                <td>${v.coche.marca}</td> 
+	                <td>${v.coche.modelo}</td>
+	                <td>${v.importeAbonado ? v.importeAbonado.toLocaleString('es-ES', {minimumFractionDigits: 2}) : "0,00"} €</td>
 	                <td class="actions">
-	                    <a href="admin?vista=detalle-reserva&id=${p.id}" class="row-btn btn-success btn-small">Ver Detalle</a>
+	                    <a href="admin?vista=detalle-venta&id=${v.id}" class="row-btn btn-success btn-small">Ver Detalle</a>
 	                </td>
 	            </tr>
 	        `;
@@ -174,12 +174,12 @@
 	
 	function cambiarPagina(n) {
 	    estado.pagina = n;
-	    sessionStorage.setItem("estado_gestion_reservas", JSON.stringify(estado));
-	    cargarReservas();
+	    sessionStorage.setItem("estado_gestion_ventas", JSON.stringify(estado));
+	    cargarVentas();
 	}
 
 	document.querySelector('a[href="admin?vista=panel"]').onclick = () => {
-	    sessionStorage.removeItem("estado_gestion_reservas");
+	    sessionStorage.removeItem("estado_gestion_ventas");
 	};	
 </script>
 </body>

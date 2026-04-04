@@ -62,6 +62,9 @@
 				
 				    <a href="#" id="linkCancelar" onclick="accion('cancelar'); return false;" 
 				       class="btn btn-secondary" style="display: none;">❌ Cancelar Reserva</a>
+				       
+				    <a href="#" id="linkEliminar" onclick="accion('eliminar'); return false;" 
+				       class="btn btn-secondary" style="display: none;">❌ Eliminar Reserva</a>
                 </div>            
         	</div>
         	</div>
@@ -78,9 +81,14 @@
 
         async function cargarDetalle() {
             try {
-                const res = await fetch(`Reserva_Sv?accion=detalle&id=${id}`);
-                const p = await res.json();
+            	const resLogin = await fetch("Login"); // visitamos mi login servlet
+                const usuario = await resLogin.json(); // obtenemos el usuario logueado
+                const nivel = usuario.nivel; // obtenemos su nivel de acceso para luego
+                const res = await fetch(`Reserva_Sv?accion=detalle&id=${id}`); // hacemos la consulta 
+                // al servlet de reservas para obtener el detalle de la reserva
+                const p = await res.json(); // obtenemos el objeto reserva con toda su información
 
+                // Rellenamos los campos con la información obtenida
                 document.getElementById("idPedido").textContent = p.id;
                 document.getElementById("imgCoche").src = `img/${p.coche?.imagen || "sin-foto.png"}`;
                 document.getElementById("vehiculo").textContent = `${p.coche?.marca} ${p.coche?.modelo}`;
@@ -102,8 +110,8 @@
                 const estadoEl = document.getElementById("estado");
                 estadoEl.textContent = p.estado;
                
-             	// Definimos el color según tu lista de pedidos
-                let estiloEstado = "color: #ffc107;"; // Por defecto PENDIENTE (Amarillo)
+             	// Definimos el color según el estado de la reserva
+                let estiloEstado = "color: #ffc107;"; // amarillo por defecto para PENDIENTE
                 if (p.estado === 'CANCELADA') estiloEstado = "color: #FF0000;"; // Rojo
                 if (p.estado === 'EXPIRADA') estiloEstado = "color: #800000;";  // Granate
                 if (p.estado === 'FINALIZADA') estiloEstado = "color: #28a745;";   // Verde
@@ -111,12 +119,21 @@
                 // Aplicamos el estilo directamente al elemento
                 estadoEl.style = estiloEstado + " font-weight: bold;";
 
-                // Mostrar acciones solo si PENDIENTE
+                // Mostrar acciones solo si reserva esta activa                
                 if (p.estado === "ACTIVA") {
-                    document.getElementById("linkCompletar").style.display = "inline-block";
-                    document.getElementById("linkCancelar").style.display = "inline-block";
+                    // Ambos ven completar si está activa
+                    document.getElementById("linkCompletar").style.display = "inline-block";                   
+                    // cancelar para nivel 2
+                    if (nivel === 2) {
+                        document.getElementById("linkCancelar").style.display = "inline-block";
+                    }
                 }
 
+                // eliminar para superuser
+                if (nivel === 1) {
+                    document.getElementById("linkEliminar").style.display = "inline-block";
+                }
+                
             } catch (e) {
                 console.error("Error cargando detalle", e);
             }

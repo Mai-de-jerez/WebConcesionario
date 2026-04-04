@@ -156,7 +156,7 @@ public class ReservaService {
             em.close();
         }
     }
-
+    
 
     // ─── CANCELAR (admin) ───
     
@@ -193,31 +193,35 @@ public class ReservaService {
             em.close();
         }
     }
-
-
-    // ─── EDITAR (admin puede tocar importe y observaciones) ───
     
-    public void editar(int id, String observaciones) {
+    // ─── BORRADO PERMANENTE (SUPERUSER) ───
+    public void borradoPermanente(int idReserva) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
-            Reserva rp = em.find(Reserva.class, id, LockModeType.PESSIMISTIC_WRITE);
-            
-            if (rp == null) {
-                throw new IllegalArgumentException("Pedido no encontrado.");
+
+            Reserva reserva = em.find(Reserva.class, idReserva, LockModeType.PESSIMISTIC_WRITE);
+
+            if (reserva != null) {
+
+                if (reserva.getCoche() != null) {
+                    Coche coche = reserva.getCoche();
+                    coche.setEstado(EstadoVehiculo.DISPONIBLE);
+          
+                    em.merge(coche); 
+                }
+                em.remove(reserva);
             }
 
-            rp.setObservaciones(observaciones);
-            
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
-            throw new RuntimeException("Error al actualizar las observaciones: " + e.getMessage(), e);
+            e.printStackTrace();
+            throw new RuntimeException("Error en el borrado permanente: " + e.getMessage());
         } finally {
             em.close();
         }
     }
-    
 
     // ─── LISTAR (admin) ─── 
     
@@ -250,11 +254,7 @@ public class ReservaService {
         ); 
     }
     
-
-    public long contarAdmin(String busqueda, EstadoReserva estado) {
-        return ReservaDAO.getInstance().contarAdmin(busqueda, estado);
-    }
-
+    
     // ─── LISTAR (cliente) ───
     public List<Reserva> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
         return ReservaDAO.getInstance().listarPorUsuario(idUsuario, pagina, porPagina);
@@ -280,8 +280,12 @@ public class ReservaService {
 
             if (r.getVenta() != null) {
                 r.getVenta().setReserva(null); 
+                if (r.getVenta().getUsuario() != null) {
+                    r.getVenta().getUsuario().setPassword(null);
+                }
             }
         }
         return r;
     }
+      
 }

@@ -56,10 +56,10 @@ public class Reserva_Sv extends HttpServlet {
             ejecutarCompletar(request, response);
         } else if ("cancelar".equals(accion)) {
             ejecutarCancelar(request, response);
-        } else if ("editar".equals(accion)) {
-            ejecutarEditar(request, response);
-        } 
-	}
+        } else if ("eliminar".equals(accion)) { 
+            ejecutarEliminar(request, response);
+        }
+    }
 
    
     /**
@@ -110,9 +110,7 @@ public class Reserva_Sv extends HttpServlet {
             double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));           
             // recogemos el método de pago del form
             String metodoStr = request.getParameter("metodoPago");
-            System.out.println("DEBUG metodoPago recibido: [" + metodoStr + "]");
             MetodoPago metodo = MetodoPago.valueOf(metodoStr.toUpperCase());
-            // Usamos el constructor vacío pero rellenamos TODO para que no haya sustos
             Usuario nuevoCliente = new Usuario();
             nuevoCliente.setUsuario(request.getParameter("usuario"));
             nuevoCliente.setEmail(request.getParameter("email"));
@@ -179,21 +177,35 @@ public class Reserva_Sv extends HttpServlet {
             ServletUtil.manejarError(response, e);
         }
     }
-
+    
+    
     /**
-     * Permite al admin editar las observaciones de un pedido.
-     * @param request contiene los parámetros: id (ID del pedido), observaciones (nuevas observaciones)
-     * @param response se envía un JSON con el resultado de la operación
-     * @throws IOException si ocurre un error de entrada/salida
+     * Permite al Superuser (Nivel 1) eliminar una reserva y su venta de forma permanente.
+     * @param request contiene el parámetro: id (ID de la reserva)
      */
-    private void ejecutarEditar(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void ejecutarEliminar(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException {
         try {
-            int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
+            HttpSession session = request.getSession(false);
+            Usuario usu = (Usuario) session.getAttribute("usuarioLogueado");
+            
+            if (usu == null || usu.getRol().getNivel() != 1) {
+                ServletUtil.enviarRespuesta(response, Map.of(
+                    "resultado", "ERROR", 
+                    "mensaje", "Solo el Superuser puede realizar borrados permanentes."
+                ));
+                return;
+            }
 
-            String observaciones = ServletUtil.sanitizar(request.getParameter("observaciones"));
-            reservaService.editar(id, observaciones); 
+            int id = ServletUtil.parsearInt(request.getParameter("id"), "ID de la reserva");
+            // eliminamos la reserva para liberar el coche
+            reservaService.borradoPermanente(id);
+            // respuesta de éxito
+            ServletUtil.enviarRespuesta(response, Map.of(
+                "resultado", "OK",
+                "mensaje", "Reserva y venta eliminadas. El coche vuelve a estar disponible."
+            ));
 
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Observaciones actualizadas correctamente"));
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }

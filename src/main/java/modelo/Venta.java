@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
-
 @Entity
 @Table(name = "ventas")
 public class Venta implements Serializable {
@@ -16,7 +15,6 @@ public class Venta implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
-
     
     @OneToOne 
     @JoinColumn(name = "id_reserva", nullable = true) 
