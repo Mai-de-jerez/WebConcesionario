@@ -60,7 +60,7 @@
             document.getElementById("val-marca").textContent = c.marca;
 	        document.getElementById("val-modelo-fila").textContent = c.modelo;
             document.getElementById("val-matricula").textContent = c.matricula;
-            document.getElementById("val-precio").textContent = `${c.precio.toLocaleString()} €`;
+            document.getElementById("val-precio").textContent = c.precioFormateado;
             document.getElementById("val-km").textContent = `${c.km.toLocaleString()} km`;
             document.getElementById("val-anio").textContent = c.anio;
             document.getElementById("val-motor").textContent = c.tipoMotor; 

@@ -1,6 +1,7 @@
 package servicio;
 
 import dao.UsuarioDAO;
+import dto.UsuarioDTO;
 import jakarta.servlet.http.Part;
 import modelo.Rol;
 import modelo.Usuario;
@@ -8,6 +9,7 @@ import util.ImagenUtil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class UsuarioService {
 	
@@ -24,20 +26,23 @@ public class UsuarioService {
         }
         return instance; 
     }
-    
-    
+
     
     public Map<String, Object> listarPaginado(String busqueda, int pagina, int porPagina) {
-
         if (pagina < 1) pagina = 1;
 
-        List<Usuario> lista = usuarioDAO.listar(busqueda, pagina, porPagina);
+        // obtenemos las entidades del DAO como siempre
+        List<Usuario> listaOriginal = usuarioDAO.listar(busqueda, pagina, porPagina);
         long totalUsuarios = usuarioDAO.contarTodos(busqueda);
-        // calculamos el total de páginas 
         int totalPaginas = (int) Math.ceil((double) totalUsuarios / porPagina);
-        // montar el mapa de respuesta
+        
+        // convertimos cada Usuario en un UsuarioDTO
+        List<UsuarioDTO> listaDtos = listaOriginal.stream()
+                .map(u -> new UsuarioDTO(u))
+                .collect(Collectors.toList()); 
+        // enviamos al Servlet la lista de DTOs
         return Map.of(
-            "usuarios", lista,
+            "usuarios", listaDtos,
             "totalPaginas", totalPaginas,
             "paginaActual", pagina
         );
@@ -48,15 +53,10 @@ public class UsuarioService {
         return usuarioDAO.contarTodos(busqueda);
     }
     
-    public Usuario obtener(int id) {
-
+    
+    public UsuarioDTO obtener(int id) {
         Usuario u = usuarioDAO.obtenerPorId(id);
-
-        if (u != null) {
-            u.setPassword(null); 
-        }
-        
-        return u;
+        return (u != null) ? new UsuarioDTO(u) : null;
     }
 
     
@@ -116,7 +116,8 @@ public class UsuarioService {
 
     
     public void eliminar(int id, Usuario ejecutor) throws Exception {
-        // Solo el SuperUser (Nivel 1) puede borrar
+
+    	// solo borra el SuperUser (Nivel 1)
         if (ejecutor.getRol().getNivel() != 1) {
             throw new Exception("Solo el SuperUser puede eliminar usuarios.");
         }
@@ -126,6 +127,13 @@ public class UsuarioService {
             throw new Exception("No puedes eliminar tu propia cuenta.");
         }
 
-        usuarioDAO.eliminar(id);
+        // manejamos el caso de que el usuario tenga ventas o reservas asociadas
+        try {
+            usuarioDAO.eliminar(id);
+        } catch (Exception e) {
+            e.printStackTrace();            
+            // Lanzamos el mensaje amigable que verá el usuario en la web
+            throw new Exception("No se puede eliminar a un usuario con ventas o reservas asociadas en el sistema.");
+        }
     }
 }

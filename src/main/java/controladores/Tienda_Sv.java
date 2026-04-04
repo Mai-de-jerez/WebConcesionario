@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import modelo.Coche;
+import dto.CocheDTO;
 import modelo.MetodoPago;
 import modelo.Usuario;
 import servicio.ReservaService;
@@ -59,7 +59,7 @@ public class Tienda_Sv extends HttpServlet {
             int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
             if (pagina < 1) pagina = 1;
 
-            List<Coche> lista = cocheService.listarParaTienda(busqueda, pagina, POR_PAGINA);
+            List<CocheDTO> lista = cocheService.listarParaTienda(busqueda, pagina, POR_PAGINA);
             long total = cocheService.totalCochesTienda(busqueda);
             int totalPaginas = (int) Math.ceil((double) total / POR_PAGINA);
 
@@ -76,7 +76,7 @@ public class Tienda_Sv extends HttpServlet {
     private void ejecutarNovedades(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         try {
-            List<Coche> novedades = cocheService.obtenerNovedades();
+            List<CocheDTO> novedades = cocheService.obtenerNovedades();
        
             ServletUtil.enviarRespuesta(response, novedades);
         } catch (Exception e) {
@@ -88,7 +88,7 @@ public class Tienda_Sv extends HttpServlet {
             throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del coche");
-            Coche coche = cocheService.obtenerCoche(id);
+            CocheDTO coche = cocheService.obtenerCoche(id);
             ServletUtil.enviarRespuesta(response, coche);
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);

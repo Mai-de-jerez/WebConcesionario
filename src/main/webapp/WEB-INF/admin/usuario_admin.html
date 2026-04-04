@@ -216,6 +216,8 @@
             }
         } catch (err) {
             setError("Error de red al intentar eliminar");
+        } finally {
+        	window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
     

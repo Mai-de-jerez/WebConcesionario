@@ -1,12 +1,14 @@
 package servicio;
 
 import dao.CocheDAO;
+import dto.CocheDTO;
 import jakarta.servlet.http.Part;
 import modelo.Coche;
+import modelo.EstadoVehiculo;
 import util.ImagenUtil;
-
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CocheService {
 	
@@ -24,35 +26,51 @@ public class CocheService {
         }
         return instance;
     }
-
-     
+ 
+    
     public Map<String, Object> listarParaAdmin(String busqueda, int pagina, int porPagina) {
         if (pagina < 1) pagina = 1;
 
-      
-        List<Coche> lista = cocheDAO.listarAdmin(busqueda, pagina, porPagina);
+        List<Coche> listaEntidades = cocheDAO.listarAdmin(busqueda, pagina, porPagina);
         long totalCoches = cocheDAO.contarAdmin(busqueda);
-
-     
         int totalPaginas = (int) Math.ceil((double) totalCoches / porPagina);
+
+        // Convertimos la lista de Coche a CocheDTO
+        List<CocheDTO> lista = listaEntidades.stream()
+                .map(CocheDTO::new)
+                .collect(Collectors.toList());
 
         return Map.of(
             "coches", lista,
             "totalPaginas", totalPaginas, 
             "paginaActual", pagina
         );
-    } 
+    }
 
     public long totalCochesAdmin(String busqueda) {
         return cocheDAO.contarAdmin(busqueda);
     }
+ 
 
-    public List<Coche> listarParaTienda(String busqueda, int pagina, int porPagina) {
-        return cocheDAO.listarTienda(busqueda, pagina, porPagina);
+    /**
+     * Listar coches para la tienda, solo los disponibles, con búsqueda y paginación.
+     * @param busqueda - se busca en marca, modelo, matrícula y tipo de motor. 
+     * @param pagina - número de página (1-based) 
+     * @param porPagina - número de coches por página
+     * @return un Map con la lista de coches y el total de páginas para la paginación
+     */
+    public List<CocheDTO> listarParaTienda(String busqueda, int pagina, int porPagina) {
+
+        List<Coche> listaEntidades = cocheDAO.listarTienda(busqueda, EstadoVehiculo.DISPONIBLE, pagina, porPagina);
+        
+        return listaEntidades.stream()
+                .map(CocheDTO::new)
+                .collect(Collectors.toList());
     }
 
+    
     public long totalCochesTienda(String busqueda) {
-        return cocheDAO.contarTienda(busqueda);
+        return cocheDAO.contarTienda(busqueda, EstadoVehiculo.DISPONIBLE);
     }
     
     
@@ -127,12 +145,19 @@ public class CocheService {
         }
     }
 
-    public Coche obtenerCoche(int id) {
-        return cocheDAO.obtenerPorId(id);
+    
+    public CocheDTO obtenerCoche(int id) {
+        Coche c = cocheDAO.obtenerPorId(id);
+        return (c != null) ? new CocheDTO(c) : null;
     }
 
-    public List<Coche> obtenerNovedades() {
-        return cocheDAO.obtenerTresUltimos();
+    
+    public List<CocheDTO> obtenerNovedades() {
+        List<Coche> listaEntidades = cocheDAO.obtenerTresUltimos();
+        
+        return listaEntidades.stream()
+                .map(CocheDTO::new)
+                .collect(Collectors.toList());
     }
 }
 

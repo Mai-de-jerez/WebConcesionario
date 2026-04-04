@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.util.Map;
+
+import dto.CocheDTO;
 import modelo.Coche;
 import modelo.Usuario;
 import util.ServletUtil;
@@ -85,7 +87,8 @@ public class Coche_Sv extends HttpServlet {
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del coche");
-            Coche coche = cocheService.obtenerCoche(id);
+   
+            CocheDTO coche = cocheService.obtenerCoche(id);
             ServletUtil.enviarRespuesta(response, coche);
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);

@@ -58,7 +58,8 @@ public class CocheDAO {
         }
     }
 
-    public List<Coche> listarTienda(String busqueda, int pagina, int porPagina) {
+    
+    public List<Coche> listarTienda(String busqueda, EstadoVehiculo estado, int pagina, int porPagina) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             String jpql = "SELECT c FROM Coche c WHERE c.estado = :estado";
@@ -71,7 +72,8 @@ public class CocheDAO {
             jpql += " ORDER BY c.id DESC";
 
             TypedQuery<Coche> query = em.createQuery(jpql, Coche.class);
-            query.setParameter("estado", EstadoVehiculo.DISPONIBLE);
+
+            query.setParameter("estado", estado);
 
             if (busqueda != null && !busqueda.isBlank()) {
                 query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
@@ -104,16 +106,20 @@ public class CocheDAO {
         }
     }
 
-    public long contarTienda(String busqueda) {
+
+    public long contarTienda(String busqueda, EstadoVehiculo estado) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             String jpql = "SELECT COUNT(c) FROM Coche c WHERE c.estado = :estado";
+            
             if (busqueda != null && !busqueda.isBlank()) {
                 jpql += " AND (LOWER(c.marca) LIKE :b OR LOWER(c.modelo) LIKE :b " +
                         "OR LOWER(c.matricula) LIKE :b OR LOWER(c.tipoMotor) LIKE :b)";
             }
+            
             TypedQuery<Long> query = em.createQuery(jpql, Long.class);
-            query.setParameter("estado", EstadoVehiculo.DISPONIBLE);
+            query.setParameter("estado", estado);
+            
             if (busqueda != null && !busqueda.isBlank()) {
                 query.setParameter("b", "%" + busqueda.toLowerCase() + "%");
             }
@@ -122,7 +128,7 @@ public class CocheDAO {
             em.close();
         }
     }
-
+    
     public void insertar(Coche c) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {

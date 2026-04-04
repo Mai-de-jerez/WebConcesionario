@@ -12,6 +12,8 @@ import modelo.Usuario;
 import servicio.UsuarioService;
 import util.ServletUtil;
 import java.util.Map;
+
+import dto.UsuarioDTO;
 import jakarta.servlet.http.Part;
 
  
@@ -97,12 +99,12 @@ public class Usuario_Sv extends HttpServlet {
         }
     }
 
-
+    
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "id");
-   
-            Usuario u = usuarioService.obtener(id);
+
+            UsuarioDTO u = usuarioService.obtener(id); 
             
             if (u == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
