@@ -1,6 +1,7 @@
 package servicio;
 
 import dao.VentaDAO;
+import dto.VentaDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import modelo.*;
@@ -8,6 +9,8 @@ import util.JPAUtil;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.mindrot.jbcrypt.BCrypt;
 
 public class VentaService {
@@ -142,38 +145,24 @@ public class VentaService {
         }
     }
 
-    // ─── LISTAR VENTAS (admin) ─── 
-    
-    public Map<String, Object> ListarAdmin(String busqueda, String estadoParam, int pagina, int porPagina) {
+    // ─── LISTAR VENTAS (admin) ───  
 
-        EstadoVenta estado = (estadoParam != null && !estadoParam.isBlank()) 
+    public Map<String, Object> ListarAdmin(String busqueda, String estadoParam, int pagina, int porPagina) {
+        
+    	EstadoVenta estado = (estadoParam != null && !estadoParam.isBlank()) 
                              ? EstadoVenta.desdeTexto(estadoParam) : null;
 
         List<Venta> listaVentas = VentaDAO.getInstance().listarAdmin(busqueda, estado, pagina, porPagina);
 
-        for (Venta v : listaVentas) {
-            // Limpiamos el usuario directo de la venta
-            if (v.getUsuario() != null) {
-                v.getUsuario().setPassword(null);
-                v.getUsuario().setReservas(null);
-                v.getUsuario().setConsultas(null);
-            }
-             // gestionamos la reserva asociada
-            if (v.getReserva() != null) {
-                v.getReserva().setVenta(null); 
-                
-                if (v.getReserva().getUsuario() != null) {
-                    v.getReserva().getUsuario().setPassword(null);
-                    v.getReserva().getUsuario().setReservas(null);
-                }
-            }
-        }
+        List<VentaDTO> listaDTO = listaVentas.stream()
+                                             .map(VentaDTO::new)
+                                             .collect(Collectors.toList());
 
         long totalRegistros = VentaDAO.getInstance().contarAdmin(busqueda, estado); 
         int totalPaginas = (int) Math.ceil((double) totalRegistros / porPagina);
 
         return Map.of(
-            "ventas", listaVentas,
+            "ventas", listaDTO, // Enviamos los DTOs limpios
             "totalPaginas", totalPaginas,
             "paginaActual", pagina
         ); 
@@ -181,9 +170,11 @@ public class VentaService {
     
     
     // ─── LISTAR VENTAS (cliente) ───
-    public List<Venta> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
-        return VentaDAO.getInstance().listarPorUsuario(idUsuario, pagina, porPagina);  
-    }
+    
+    public List<VentaDTO> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
+        List<Venta> ventas = VentaDAO.getInstance().listarPorUsuario(idUsuario, pagina, porPagina);
+        return ventas.stream().map(VentaDTO::new).collect(Collectors.toList());
+    } 
 
     public long contarPorUsuario(int idUsuario) {
         return VentaDAO.getInstance().contarPorUsuario(idUsuario);
@@ -191,31 +182,10 @@ public class VentaService {
  
     
     // ─── DETALLE ───
-
-	public Venta obtenerPorId(int id) {
-	    Venta v = VentaDAO.getInstance().obtenerPorId(id);
-	
-	    if (v != null) {
-	        // limpiamos el usuario directo de la Venta
-	        if (v.getUsuario() != null) {
-	            v.getUsuario().setPassword(null);
-	            v.getUsuario().setReservas(null);
-	            v.getUsuario().setConsultas(null);
-	        }
-	
-	        // gestionamos la reserva asociada
-	        if (v.getReserva() != null) {
-	            // cortamos la referencia circular hacia atrás
-	            v.getReserva().setVenta(null); 
-	
-	            // limpiamos el Usuario que está dentro de esa reserva
-	            if (v.getReserva().getUsuario() != null) {
-	                v.getReserva().getUsuario().setPassword(null);
-	                v.getReserva().getUsuario().setReservas(null); 
-	            }
-	        }
-	    }
-	    return v;
-	}
+    
+	public VentaDTO obtenerPorId(int id) {
+        Venta v = VentaDAO.getInstance().obtenerPorId(id);
+        return (v != null) ? new VentaDTO(v) : null;
+    }
 
 }

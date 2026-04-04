@@ -1,6 +1,7 @@
 package servicio;
 
 import dao.ReservaDAO;
+import dto.ReservaDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import modelo.*;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -55,7 +57,7 @@ public class ReservaService {
         }
     }
 
-    // ─── CREAR (cliente nuevo el admin en la tienda) ───
+    // ─── CREAR (nueva reserva el admin en la tienda (creando a su vez el nuevo cliente) ───
     public void crearConNuevoUsuario(Usuario nuevoCliente, int idCoche, double importeParaVenta, MetodoPago metodo) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -233,33 +235,31 @@ public class ReservaService {
 
         List<Reserva> listaReservas = ReservaDAO.getInstance().listarAdmin(busqueda, estado, pagina, porPagina);
 
-        for (Reserva r : listaReservas) {
-            if (r.getUsuario() != null) {
-                r.getUsuario().setReservas(null); 
-                r.getUsuario().setPassword(null);
-            }
-            if (r.getVenta() != null) {
-                r.getVenta().setReserva(null);  
-            }
-    
-        }
+        List<ReservaDTO> listaDTO = listaReservas.stream().map(ReservaDTO::new).collect(Collectors.toList());
 
         long totalRegistros = ReservaDAO.getInstance().contarAdmin(busqueda, estado); 
-        int totalPaginas = (int) Math.ceil((double) totalRegistros / porPagina);
+        int totalPaginas = (int) Math.ceil((double) totalRegistros / porPagina);    
 
         return Map.of(
-            "reservas", listaReservas,
+            "reservas", listaDTO, 
             "totalPaginas", totalPaginas,
             "paginaActual", pagina
         ); 
     }
     
     
-    // ─── LISTAR (cliente) ───
-    public List<Reserva> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
-        return ReservaDAO.getInstance().listarPorUsuario(idUsuario, pagina, porPagina);
+    // ─── LISTAR (para cliente sus reservas) ───
+    
+    public List<ReservaDTO> listarPorUsuario(int idUsuario, int pagina, int porPagina) {
+
+        return ReservaDAO.getInstance().listarPorUsuario(idUsuario, pagina, porPagina)
+                         .stream()
+                         .map(ReservaDTO::new)
+                         .collect(Collectors.toList());
     }
 
+    // ─── CONTAR (para paginación en cliente) ───
+    
     public long contarPorUsuario(int idUsuario) {
         return ReservaDAO.getInstance().contarPorUsuario(idUsuario);
     }
@@ -267,25 +267,11 @@ public class ReservaService {
     
     // ─── DETALLE ───
     
-    public Reserva obtenerPorId(int id) {
+    public ReservaDTO obtenerPorId(int id) {
         Reserva r = ReservaDAO.getInstance().obtenerPorId(id);
+        if (r == null) return null;
 
-        if (r != null) {
-            if (r.getUsuario() != null) {
-                Usuario u = r.getUsuario();
-                u.setPassword(null);
-                u.setConsultas(null);
-                u.setReservas(null); 
-            }
-
-            if (r.getVenta() != null) {
-                r.getVenta().setReserva(null); 
-                if (r.getVenta().getUsuario() != null) {
-                    r.getVenta().getUsuario().setPassword(null);
-                }
-            }
-        }
-        return r;
+        return new ReservaDTO(r);
     }
       
 }

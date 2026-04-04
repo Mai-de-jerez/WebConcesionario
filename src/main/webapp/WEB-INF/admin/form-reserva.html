@@ -124,33 +124,33 @@
                 console.log("FORM DATA →", key, "=", value);
             }
             const urlDestino = `Reserva_Sv?accion=crear`;
-
+            
             try {
                 const res = await fetch(urlDestino, {
                     method: 'POST',
                     body: new URLSearchParams(formData)
                 });
 
-                if (!res.ok) throw new Error("Error en la respuesta del servidor");
-
                 const data = await res.json();
 
-                if (data.resultado === "OK") {
+                if (res.ok && data.resultado === "OK") {
                     mostrarMensaje(data.mensaje, "success");
-                    setTimeout(() => {
-                        window.location.href = "admin?vista=coches";
-                    }, 2000);
+                    setTimeout(() => { window.location.href = "admin?vista=coches"; }, 2000);
                 } else {
-                    setError(data.mensaje);
-                    // Si el error viene de base de datos por email repetido
+                    // Si el servidor devuelve un error, mostramos el mensaje que venga en el JSON
+                    setError(data.mensaje || "Error al procesar la reserva");
                     if(data.mensaje.toLowerCase().includes("email")) {
                         mostrarErrorEnCampo("email", "Este email ya existe");
+                    }
+                    // Si quieres que el usuario sepa qué ha fallado exactamente:
+                    if(data.mensaje.includes("coche") || data.mensaje.includes("disponible")) {
+                        mostrarErrorEnCampo("idCoche", "Vehículo no disponible");
                     }
                 }
             } catch (err) {
                 console.error(err);
-                setError("No se ha podido conectar con el servidor. Inténtalo de nuevo.");
-            }
+                setError("No se ha podido conectar con el servidor.");
+            }                        
         };
     });
     </script>

@@ -11,7 +11,7 @@ import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import modelo.Reserva;
+import dto.ReservaDTO;
 import modelo.Usuario;
 import servicio.ReservaService;
 import servicio.UsuarioService;
@@ -27,7 +27,7 @@ public class Cliente_Sv extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final int POR_PAGINA = 10;
-    private final ReservaService pedidoService = ReservaService.getInstance();
+    private final ReservaService reservaService = ReservaService.getInstance();
     private final UsuarioService usuarioService = new UsuarioService();
 
     @Override
@@ -73,8 +73,8 @@ public class Cliente_Sv extends HttpServlet {
             int pagina = ServletUtil.parsearInt(request.getParameter("pagina"), "página");
             if (pagina < 1) pagina = 1;
 
-            List<Reserva> pedidos = pedidoService.listarPorUsuario(user.getId_usuario(), pagina, POR_PAGINA);
-            long total = pedidoService.contarPorUsuario(user.getId_usuario());
+            List<ReservaDTO> pedidos = reservaService.listarPorUsuario(user.getId_usuario(), pagina, POR_PAGINA);
+            long total = reservaService.contarPorUsuario(user.getId_usuario());
             int totalPaginas = (int) Math.ceil((double) total / POR_PAGINA);
 
             ServletUtil.enviarRespuesta(response, Map.of(
@@ -92,13 +92,14 @@ public class Cliente_Sv extends HttpServlet {
         try {
             Usuario user = obtenerUsuario(request);
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            Reserva rp = pedidoService.obtenerPorId(id);
+
+            ReservaDTO rp = reservaService.obtenerPorId(id);
 
             // Seguridad: el cliente solo puede ver sus propios pedidos
-            if (rp == null || rp.getUsuario() == null || rp.getUsuario().getId_usuario() != user.getId_usuario()) {
+            if (rp == null || rp.getCliente() == null || rp.getCliente().getId_usuario() != user.getId_usuario()) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Acceso denegado"));
-                return;
+                return; 
             }
 
             ServletUtil.enviarRespuesta(response, rp);

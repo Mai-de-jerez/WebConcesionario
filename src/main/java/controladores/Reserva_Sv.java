@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
+import dto.ReservaDTO;
 import modelo.MetodoPago;
-import modelo.Reserva;
 import modelo.Usuario;
 import servicio.ReservaService;
 import util.ServletUtil;
@@ -94,14 +94,19 @@ public class Reserva_Sv extends HttpServlet {
             throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID del pedido");
-            Reserva rp = reservaService.obtenerPorId(id);
+            ReservaDTO rp = reservaService.obtenerPorId(id);
             ServletUtil.enviarRespuesta(response, rp);
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);
         }
     }
     
-    
+    /**
+     * Permite al admin crear una reserva con un nuevo cliente registrado.
+     * @param request contiene los parámetros del coche
+     * @param response se envía un JSON con el resultado de la operación
+     * @throws IOException si ocurre un error de entrada/salida
+     */
     private void ejecutarCrear(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         try {
@@ -211,6 +216,11 @@ public class Reserva_Sv extends HttpServlet {
         }
     }
 
+    /**
+     * Verifica si el usuario logueado tiene permisos de admin (nivel 2 o superior).
+     * @param request el objeto HttpServletRequest para acceder a la sesión y obtener el usuario logueado
+     * @return true si el usuario es admin, false en caso contrario
+     */
     private boolean esAdmin(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) return false;

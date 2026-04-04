@@ -24,7 +24,7 @@ import java.io.IOException;
 	    "/Coche_Sv",
 	    "/Usuario_Sv",
 	    "/Reserva_Sv",
-	    "/Venta_Sv/*",
+	    "/Venta_Sv",
 	})
 public class AuthFilter extends HttpFilter implements Filter {
 	private static final long serialVersionUID = 1L;

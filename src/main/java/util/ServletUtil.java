@@ -70,22 +70,27 @@ public class ServletUtil {
     /**
      * Centraliza el manejo de errores enviando el status HTTP correcto y JSON
      */
+    
     public static void manejarError(HttpServletResponse response, Exception e) {
         e.printStackTrace(); 
         
-        int status = (e instanceof IllegalArgumentException) 
+        int status = (e instanceof IllegalArgumentException || e instanceof IllegalStateException) 
                      ? HttpServletResponse.SC_BAD_REQUEST 
                      : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         
         response.setStatus(status);
-        
+
+        // Si la excepción es una RuntimeException que envuelve a otra, intentamos sacar el mensaje interno
+        String mensajeUsuario = (e.getMessage() != null) ? e.getMessage() : "Error inesperado en el sistema";
+
+        // ENVIAR LA RESPUESTA JSON
         try {
             enviarRespuesta(response, Map.of(
                 "resultado", "ERROR",
-                "mensaje", (e.getMessage() != null ? e.getMessage() : "Error inesperado en el sistema")
+                "mensaje", mensajeUsuario
             ));
         } catch (IOException ioException) {
-            ioException.printStackTrace();
+            System.err.println("Error fatal enviando respuesta JSON: " + ioException.getMessage());
         }
     }
     

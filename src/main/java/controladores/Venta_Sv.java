@@ -7,12 +7,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import modelo.Usuario;
-import modelo.Venta;
 import servicio.VentaService;
 import util.ServletUtil;
-
 import java.io.IOException;
 import java.util.Map;
+
+import dto.VentaDTO;
 
 /**
  * Servlet implementation class Venta_Sv
@@ -122,7 +122,8 @@ public class Venta_Sv extends HttpServlet {
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID de venta");
-            Venta v = ventaService.obtenerPorId(id);
+            
+            VentaDTO v = ventaService.obtenerPorId(id);
 
             if (v == null) {
                 throw new Exception("La venta solicitada no existe.");
