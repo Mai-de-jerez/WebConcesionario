@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
 import dto.ReservaDTO;
-import modelo.MetodoPago;
 import modelo.Usuario;
 import servicio.ReservaService;
 import util.ServletUtil;
@@ -115,7 +114,6 @@ public class Reserva_Sv extends HttpServlet {
             double importeSenal = ServletUtil.parsearDouble(request.getParameter("importeSenal"));           
             // recogemos el método de pago del form
             String metodoStr = request.getParameter("metodoPago");
-            MetodoPago metodo = MetodoPago.valueOf(metodoStr.toUpperCase());
             Usuario nuevoCliente = new Usuario();
             nuevoCliente.setUsuario(request.getParameter("usuario"));
             nuevoCliente.setEmail(request.getParameter("email"));
@@ -124,7 +122,7 @@ public class Reserva_Sv extends HttpServlet {
             nuevoCliente.setTelefono(request.getParameter("telefono"));
             nuevoCliente.setDireccion(request.getParameter("direccion"));
 
-            reservaService.crearConNuevoUsuario(nuevoCliente, idCoche, importeSenal, metodo);
+            reservaService.crearConNuevoUsuario(nuevoCliente, idCoche, importeSenal, metodoStr);
 
             ServletUtil.enviarRespuesta(response, Map.of(
                 "resultado", "OK",

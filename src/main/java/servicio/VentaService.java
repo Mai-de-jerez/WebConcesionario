@@ -1,10 +1,12 @@
 package servicio;
 
+import dao.UsuarioDAO;
 import dao.VentaDAO;
 import dto.VentaDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import modelo.*;
+import util.EmailUtil;
 import util.JPAUtil;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +26,12 @@ public class VentaService {
 
     // ─── CREAR VENTA (cliente nuevo el admin en la tienda) ───
     public void crearVenta(Usuario nuevoCliente, int idCoche, double importeAbonado) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        
+    	if (UsuarioDAO.getInstance().existeUsuarioOEmail(nuevoCliente.getUsuario(), nuevoCliente.getEmail())) {
+            throw new IllegalArgumentException("El usuario o email ya están registrados.");
+        }
+    	
+    	EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
 
@@ -56,6 +63,8 @@ public class VentaService {
             em.persist(v); 
             
             em.getTransaction().commit(); 
+            
+            EmailUtil.enviarBienvenida(nuevoCliente.getEmail(), passPlano, cocheDB.getMarca() + " " + cocheDB.getModelo(), "venta");
             
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();

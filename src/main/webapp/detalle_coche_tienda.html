@@ -99,10 +99,10 @@
 		        document.getElementById("val-desc").textContent = c.descripcion || "Sin descripción.";
 	
 		        const btnAccion = document.getElementById("link-carrito");
-		
-		        btnAccion.textContent = "🛒 Reservar";
-		        btnAccion.className = "btn btn-success"; 
-		        btnAccion.href = `Tienda_Sv?accion=checkout&idCoche=${c.id}`;
+
+	            btnAccion.textContent = "🛒 Reservar";
+	            btnAccion.className = "btn btn-success"; 
+	            btnAccion.href = `clientes?vista=checkout&idCoche=${c.id}`;
 	
 		    } catch (error) {
 		    	setError("Error al cargar los datos del vehículo");

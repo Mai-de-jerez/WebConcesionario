@@ -137,13 +137,14 @@ public class Cliente_Sv extends HttpServlet {
             ServletUtil.manejarError(response, e);
         }
     }
-    
 
+    
     private boolean esCliente(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) return false;
-        Usuario usu = (Usuario) session.getAttribute("usuarioLogueado");
-        return (usu != null && usu.getRol().getNivel() == 3);
+        Usuario usu = (Usuario) session.getAttribute("usuarioLogueado");       
+        // nivel mayor que 3 no pueden acceder a los encantos de ser cliente
+        return (usu != null && usu.getRol().getNivel() <= 3);
     }
 
     private Usuario obtenerUsuario(HttpServletRequest request) {

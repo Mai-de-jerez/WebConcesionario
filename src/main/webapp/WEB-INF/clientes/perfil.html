@@ -36,7 +36,7 @@
                     <div class="table-container" style="margin: 0;">
                         <table style="font-size: 0.95em; width: 100%;">
                             <tbody>
-                            	<tr><td><strong>Estatus</strong></td><td id="val-estatus" style="font-weight: bold; color: #764ba2;"></td></tr>
+                            	<tr><td><strong>Estatus</strong></td><td id="val-estatus" class="purple-bold"></td></tr>
                                 <tr><td><strong>Nombre</strong></td><td id="val-nombre"></td></tr>
                                 <tr><td><strong>Apellidos</strong></td><td id="val-apellidos"></td></tr>
                                 <tr><td><strong>Email</strong></td><td id="val-email"></td></tr>
@@ -70,7 +70,7 @@
                 // Inyectar datos en la ficha
                 document.getElementById("img-usuario").src = `img/${u.foto || 'sin-foto.png'}`;
                 document.getElementById("username-txt").textContent = u.nombre || u.usuario;
-                document.getElementById("val-estatus").textContent = "Cliente";
+                document.getElementById("val-estatus").textContent = u.rol || "Cliente";
                 document.getElementById("val-nombre").textContent = u.nombre || "---";
                 document.getElementById("val-apellidos").textContent = u.apellidos || "---";
                 document.getElementById("val-email").textContent = u.email;

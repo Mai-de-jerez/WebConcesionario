@@ -52,13 +52,12 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Pillamos el ID de la reserva de la URL (ej: confirmacion_reserva.html?id=45)
+
             const params = new URLSearchParams(window.location.search);
             const id = params.get("id");
             if (id) {
                 document.getElementById("idPedidoLabel").textContent = "#" + id;
             } else {
-                // Por si acaso llegas aquí sin ID (cosa rara)
                 document.getElementById("idPedidoLabel").textContent = "#PENDIENTE";
             }
         });

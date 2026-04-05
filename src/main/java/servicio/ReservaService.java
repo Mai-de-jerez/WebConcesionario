@@ -29,11 +29,18 @@ public class ReservaService {
 
     // ─── CREAR (cliente registrado) ───
     
-    public void crear(Usuario usuario, int idCoche, double importeReserva, MetodoPago metodoDeLaReserva) {
+    public void crear(Usuario usuario, int idCoche, double importeReserva, String metodoPagoStr) {
     	
     	if (importeReserva < 500) {
             throw new IllegalArgumentException("El importe mínimo de la señal debe ser de 500€.");       
     	}
+    	
+    	MetodoPago metodoDeLaReserva;
+        try {
+            metodoDeLaReserva = MetodoPago.valueOf(metodoPagoStr.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("El método de pago '" + metodoPagoStr + "' no es válido.");
+        }
     	
     	EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -68,7 +75,15 @@ public class ReservaService {
     
 
     // ─── CREAR (nueva reserva el admin en la tienda (creando a su vez el nuevo cliente) ───
-    public void crearConNuevoUsuario(Usuario nuevoCliente, int idCoche, double importeReserva, MetodoPago metodo) {
+    public void crearConNuevoUsuario(Usuario nuevoCliente, int idCoche, double importeReserva, String metodoStr) {
+    	
+    	MetodoPago metodo;
+        try {
+            metodo = MetodoPago.valueOf(metodoStr.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("El método de pago '" + metodoStr + "' no es válido.");
+        }
+        
     	// validamos que el usuario o email no existan ya en la base de datos para evitar conflictos
     	if (UsuarioDAO.getInstance().existeUsuarioOEmail(nuevoCliente.getUsuario(), nuevoCliente.getEmail())) {
             throw new IllegalArgumentException("Vaya, ese nombre de usuario o email ya están registrados.");
@@ -108,7 +123,7 @@ public class ReservaService {
             em.persist(r);             
             em.getTransaction().commit(); 
             
-            EmailUtil.enviarBienvenidaYReserva(nuevoCliente.getEmail(), passPlano, cocheDB.getMarca() + " " + cocheDB.getModelo());
+            EmailUtil.enviarBienvenida(nuevoCliente.getEmail(), passPlano, cocheDB.getMarca() + " " + cocheDB.getModelo(), "reserva");
             
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();

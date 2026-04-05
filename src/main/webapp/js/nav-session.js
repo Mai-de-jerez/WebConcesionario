@@ -10,27 +10,26 @@ async function gestionarNavegacion() {
         const res = await fetch('Login', {
             headers: { 'Accept': 'application/json' }
         });
-        
-        if (res.ok) {
+			
+		if (res.ok) {
             const datos = await res.json();
             
-            // Usamos directamente 'nivel' que viene del Servlet
+            // botón de Administrar (solo si nivel es 1 o 2)
+            let botonAdmin = "";
             if (datos.nivel !== undefined && datos.nivel <= 2) {
-                // ADMIN O STAFF
-                navRight.innerHTML = `
-					<a href="admin?vista=panel" class="btn-nav">Panel Admin</a>
-                    <a href="LogoutServlet" class="nav-link" style="margin-left:10px;">Salir</a>
-                `;
-            } else {
-                // CLIENTE
-                navRight.innerHTML = `
-                    <span class="nav-link">Hola, ${datos.nombre || 'Usuario'}</span>
-                    <a href="perfil.html" class="nav-link" style="margin: 0 15px;">Mi Perfil</a>
-                    <a href="LogoutServlet" class="btn-nav">Cerrar Sesión</a>
-                `;
+                botonAdmin = `<a href="admin?vista=panel" class="nav-link">Administrar</a>`;
             }
-        } else {
-            // Si no hay sesión (401), botón de login
+
+            // pintamos la barra para los logueados (Admin, Staff y Cliente)
+            navRight.innerHTML = `
+                <span class="nav-link purple-bold">Hola, ${datos.nombre || 'Usuario'}</span>
+                <a href="perfil.html" class="nav-link">Mi Perfil</a>
+				${botonAdmin}
+                <a href="LogoutServlet" class="btn-nav">Cerrar Sesión</a>
+            `;
+            
+        } else {				
+            // Si no hay sesión al login
             navRight.innerHTML = `<a href="login.html" class="btn-nav">Login</a>`;
         }
     } catch (err) {

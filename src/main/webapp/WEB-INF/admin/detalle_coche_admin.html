@@ -68,7 +68,13 @@
             document.getElementById("val-estado").textContent = c.estado;
             document.getElementById("val-desc").textContent = c.descripcion || "Sin descripción.";
             document.getElementById("link-editar").href = `admin?vista=form-vehiculo&id=${c.id}`;
-            document.getElementById("link-reservar").href = `admin?vista=form-reserva&idCoche=${c.id}`;
+            
+            const btnReservar = document.getElementById("link-reservar");
+            if (c.estado !== "DISPONIBLE") {
+                btnReservar.remove(); 
+            } else {
+                btnReservar.href = `admin?vista=form-reserva&idCoche=${c.id}`;
+            }
         });
     </script>
 </body>

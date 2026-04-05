@@ -204,6 +204,11 @@ select:focus {
     font-size: 0.9em;
 }
 
+.purple-bold{
+	font-weight: bold; 
+	color: #764ba2;
+}
+
 /* ---SECCION HERO--- */
 
 .hero {

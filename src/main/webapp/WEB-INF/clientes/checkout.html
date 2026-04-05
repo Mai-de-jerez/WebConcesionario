@@ -180,7 +180,7 @@
 
                 try {
                     // enviamos el importe al servidor para que lo valide y procese la reserva
-                    const res = await fetch("Tienda_Sv", {
+                    const res = await fetch("Checkout_Sv", {
                         method: "POST",
                         headers: { "Content-Type": "application/x-www-form-urlencoded" },
                         body: `accion=reservar&idCoche=${idCoche}&importeSenal=${importe}&metodoPago=${metodo}`
@@ -189,7 +189,7 @@
                     const data = await res.json();
 
                     if (data.resultado === "OK") {
-                        window.location.href = "Tienda_Sv?accion=confirmacion";
+                        window.location.href = "clientes?vista=confirmacion";
                     } else {
                         // Si el Service lanza el error del email o el importe, saldrá aquí
                         mostrarMensaje(data.mensaje, "error");
