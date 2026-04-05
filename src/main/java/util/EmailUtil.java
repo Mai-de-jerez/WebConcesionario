@@ -21,7 +21,7 @@ public class EmailUtil {
                     System.getenv("MAIL_PASSWORD")
                 );
             }
-        });
+        }); 
     }
 
     public static void enviarConfirmacion(Consultas c) {
@@ -53,6 +53,34 @@ public class EmailUtil {
             Transport.send(message);
         } catch (Throwable t) {
             t.printStackTrace();
+        }
+    }
+    
+    
+    public static void enviarBienvenidaYReserva(String emailDestino, String passPlano, String cocheModelo) {
+        try {
+            String html = " <div style='font-family: sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 10px;'>"
+                + "<h2 style='color: #764ba2;'>¡Bienvenido al Concesionario May!</h2>"
+                + "<p>Hemos registrado tu reserva para el vehículo: <strong>" + cocheModelo + "</strong>.</p>"
+                + "<p>Como es tu primera vez con nosotros, te hemos creado una cuenta automática para que gestiones tus documentos:</p>"
+                + "<div style='background: #f4f4f4; padding: 15px; border-radius: 5px;'>"
+                + "   <strong>Usuario:</strong> " + emailDestino + "<br>"
+                + "   <strong>Contraseña temporal:</strong> <span style='color: #e74c3c; font-weight: bold;'>" + passPlano + "</span>"
+                + "</div>"
+                + "<p style='margin-top: 20px;'>Te recomendamos cambiar tu contraseña una vez accedas al sistema.</p>"
+                + "<a href='http://localhost:8080/WebConcesionario/login.jsp' style='display: inline-block; background-color: #764ba2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Acceder a mi Zona Privada</a>"
+                + "</div>";
+
+            Message message = new MimeMessage(crearSesion());
+            message.setFrom(new InternetAddress("ventas@concesionario-may.com"));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(emailDestino));
+            message.setSubject("🚗 Bienvenido - Confirmación de Reserva y Acceso");
+            message.setContent(html, "text/html; charset=utf-8");
+            
+            Transport.send(message);
+        } catch (Throwable t) {
+            // Logueamos el error pero no cortamos la ejecución del programa
+            System.err.println("Error enviando email de bienvenida: " + t.getMessage());
         }
     }
 }

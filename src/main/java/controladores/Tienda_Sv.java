@@ -145,14 +145,13 @@ public class Tienda_Sv extends HttpServlet {
             reservaService.crear(user, idCoche, importeSenal, metodoPago);
 
             ServletUtil.enviarRespuesta(response, Map.of("resultado", "OK", "mensaje", "Reserva realizada correctamente"));
-                       
-        } catch (IllegalArgumentException e) {
-            
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); 
-            ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", "Método de pago no válido"));
-        } catch (Exception e) {
-            ServletUtil.manejarError(response, e);
-        }
+                             
+	    } catch (IllegalArgumentException | IllegalStateException e) {
+	        response.setStatus(HttpServletResponse.SC_BAD_REQUEST); 
+	        ServletUtil.enviarRespuesta(response, Map.of("resultado", "ERROR", "mensaje", e.getMessage()));
+	    } catch (Exception e) {
+	        ServletUtil.manejarError(response, e);
+	    }
     }
     
 

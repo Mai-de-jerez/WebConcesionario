@@ -1,13 +1,16 @@
 package servicio;
 
 import dao.ReservaDAO;
+import dao.UsuarioDAO;
 import dto.ReservaDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import modelo.*;
+import util.EmailUtil;
 import util.JPAUtil;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,8 +29,13 @@ public class ReservaService {
 
     // ─── CREAR (cliente registrado) ───
     
-    public void crear(Usuario usuario, int idCoche, double importeSenal, MetodoPago metodoDeLaReserva) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+    public void crear(Usuario usuario, int idCoche, double importeReserva, MetodoPago metodoDeLaReserva) {
+    	
+    	if (importeReserva < 500) {
+            throw new IllegalArgumentException("El importe mínimo de la señal debe ser de 500€.");       
+    	}
+    	
+    	EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
 
@@ -35,14 +43,15 @@ public class ReservaService {
             Coche cocheDB = em.find(Coche.class, idCoche, LockModeType.PESSIMISTIC_WRITE);
             if (cocheDB == null || !cocheDB.isDisponible())
                 throw new IllegalStateException("Coche no disponible.");
-
-            Reserva r = new Reserva(usuario, cocheDB, metodoDeLaReserva);
+            
+            Reserva r = new Reserva(usuario, cocheDB, metodoDeLaReserva, importeReserva);
             r.setTransaccionId(UUID.randomUUID().toString());
-            r.setObservaciones("Reserva online pendiente de pago de señal.");
+            r.setObservaciones("Importe pendiente de abonar: " + r.getImportePendiente() + "€.");
 
-            Venta v = new Venta(r, usuario, cocheDB, importeSenal, null); 
+            Venta v = new Venta(r, usuario, cocheDB, importeReserva, metodoDeLaReserva); 
             v.setEstado(EstadoVenta.PENDIENTE);
-            v.setObservaciones("Registro de pago pendiente. Método de pago por confirmar.");
+            v.setTransaccionId(r.getTransaccionId());
+            v.setObservaciones("Importe pendiente de abonar: " + r.getImportePendiente() + "€.");
             
             r.setVenta(v);
             cocheDB.setEstado(EstadoVehiculo.RESERVADO);
@@ -56,10 +65,16 @@ public class ReservaService {
             em.close();
         }
     }
+    
 
     // ─── CREAR (nueva reserva el admin en la tienda (creando a su vez el nuevo cliente) ───
-    public void crearConNuevoUsuario(Usuario nuevoCliente, int idCoche, double importeParaVenta, MetodoPago metodo) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+    public void crearConNuevoUsuario(Usuario nuevoCliente, int idCoche, double importeReserva, MetodoPago metodo) {
+    	// validamos que el usuario o email no existan ya en la base de datos para evitar conflictos
+    	if (UsuarioDAO.getInstance().existeUsuarioOEmail(nuevoCliente.getUsuario(), nuevoCliente.getEmail())) {
+            throw new IllegalArgumentException("Vaya, ese nombre de usuario o email ya están registrados.");
+        }
+    	
+    	EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
 
@@ -72,33 +87,28 @@ public class ReservaService {
             // coche
             Coche cocheDB = em.find(Coche.class, idCoche, LockModeType.PESSIMISTIC_WRITE);
             if (cocheDB == null || cocheDB.getEstado() != EstadoVehiculo.DISPONIBLE) {
-                throw new IllegalStateException("Coche no disponible.");
+                throw new IllegalStateException("Coche no disponible para reserva.");
             }
 
             // reserva 
-            Reserva r = new Reserva();
-            r.setUsuario(nuevoCliente);
-            r.setCoche(cocheDB);
-            r.setMetodoPago(metodo); 
-            r.setTransaccionId(UUID.randomUUID().toString()); 
+            Reserva r = new Reserva(nuevoCliente, cocheDB, metodo, importeReserva);
+            r.setTransaccionId(UUID.randomUUID().toString());  
             r.setEstado(EstadoReserva.ACTIVA);
+            r.setObservaciones("Importe pendiente de abonar: " + r.getImportePendiente() + "€.");
 
             // en ventas
-            Venta v = new Venta();
-            v.setReserva(r);
-            v.setUsuario(nuevoCliente);
-            v.setCoche(cocheDB);
-            v.setImporteAbonado(importeParaVenta); 
+            Venta v = new Venta(r, nuevoCliente, cocheDB, importeReserva, metodo); 
             v.setEstado(EstadoVenta.PENDIENTE); 
             v.setTransaccionId(r.getTransaccionId()); 
+            v.setObservaciones("Importe pendiente de abonar: " + r.getImportePendiente() + "€.");
 
             r.setVenta(v); 
             cocheDB.setEstado(EstadoVehiculo.RESERVADO);
 
-            em.persist(r);
-            em.persist(v); 
-            
+            em.persist(r);             
             em.getTransaction().commit(); 
+            
+            EmailUtil.enviarBienvenidaYReserva(nuevoCliente.getEmail(), passPlano, cocheDB.getMarca() + " " + cocheDB.getModelo());
             
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -108,7 +118,6 @@ public class ReservaService {
             em.close();
         }
     }
-
     
     
     // ─── COMPLETAR (admin cobra en tienda) ───
@@ -140,7 +149,7 @@ public class ReservaService {
             
             // venta y reserva pasan a finalizadas
             v.setEstado(EstadoVenta.FINALIZADA);
-            v.setObservaciones("Venta completada en tienda física. ID autogenerado.");
+            v.setObservaciones("Venta completada en tienda física.");
             
             r.setEstado(EstadoReserva.FINALIZADA);
             
@@ -175,11 +184,13 @@ public class ReservaService {
             Venta v = r.getVenta();
 
             r.setEstado(EstadoReserva.CANCELADA);
+            r.setObservaciones("Reserva cancelada el " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
 
             // actualizamos ventas
-            if (v != null) {
+            if (v != null) { 
                 v.setEstado(EstadoVenta.CANCELADA);
-                v.setImporteAbonado(0); // Devolvemos el importe a 0 contablemente
+                v.setImporteAbonado(0); // La venta final sí es 0 porque no se cerró
+                v.setObservaciones("Venta cancelada.");
             }
 
             // coche liberado si existía
@@ -195,6 +206,7 @@ public class ReservaService {
             em.close();
         }
     }
+
     
     // ─── BORRADO PERMANENTE (SUPERUSER) ───
     public void borradoPermanente(int idReserva) {

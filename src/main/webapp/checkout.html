@@ -29,10 +29,6 @@
             <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #764ba2;">
                 <h2 style="margin: 0 0 10px 0; color: #764ba2;">🚗 Vehículo seleccionado</h2>
                 <p id="info-coche" style="margin: 0; font-size: 1.1em;">Cargando...</p>
-                <p style="margin: 10px 0 0 0;">
-                    <strong>Señal a abonar: </strong>
-                    <span style="font-size: 1.3em; font-weight: bold; color: #764ba2;">500,00 €</span>
-                </p>
             </div>
 
             <!-- Datos del cliente -->
@@ -51,6 +47,13 @@
                     <option value="paypal">PayPal</option>
                 </select>
                 <span id="error-metodoPago" class="mensaje-error-campo"></span>
+            </div>
+            
+            <!-- Importe de la señal -->
+            <div class="form-group">
+                <label for="importeSenal">Importe de la Señal (€): *</label>
+                <input type="number" id="importeSenal" name="importeSenal" step="0.01" required placeholder="0.00">
+                <span id="error-importeSenal" class="mensaje-error-campo"></span>
             </div>
 
             <!-- Formulario Tarjeta -->
@@ -149,28 +152,46 @@
                 if (this.value) document.getElementById(`form-${this.value}`).style.display = "block";
             });
 
-            // Confirmar reserva — delegación de eventos
+            // Confirmar reserva — delegación de eventos           
             document.getElementById("btn-confirmar").addEventListener("click", async (e) => {
                 e.preventDefault();
                 limpiarPantallaErrores();
 
+                // recogemos los valores
                 const metodo = document.getElementById("metodoPago").value;
+                const importe = document.getElementById("importeSenal").value; 
+
+                // validaciones básicas en el Front
                 if (!metodo) {
                     mostrarErrorEnCampo("metodoPago", "Selecciona un método de pago.");
                     return;
                 }
 
+                if (!importe || importe < 500) {
+                    mostrarErrorEnCampo("importeSenal", "El importe mínimo de la señal son 500 €.");
+                    return;
+                }
+
+                // máximo a abonar como señal
+                if (importe > 5000) {
+                    mostrarErrorEnCampo("importeSenal", "El importe es demasiado alto para una reserva.");
+                    return;
+                }
+
                 try {
+                    // enviamos el importe al servidor para que lo valide y procese la reserva
                     const res = await fetch("Tienda_Sv", {
                         method: "POST",
                         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: `accion=reservar&idCoche=${idCoche}&importeSenal=500&metodoPago=${metodo}`
+                        body: `accion=reservar&idCoche=${idCoche}&importeSenal=${importe}&metodoPago=${metodo}`
                     });
+
                     const data = await res.json();
 
                     if (data.resultado === "OK") {
                         window.location.href = "Tienda_Sv?accion=confirmacion";
                     } else {
+                        // Si el Service lanza el error del email o el importe, saldrá aquí
                         mostrarMensaje(data.mensaje, "error");
                     }
                 } catch (e) {

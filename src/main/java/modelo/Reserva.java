@@ -35,10 +35,13 @@ public class Reserva implements Serializable {
     @Column(name = "fecha_expiracion")
     private LocalDateTime fechaExpiracion;
  
-    
+    // ─── PAGO ───
     @Enumerated(EnumType.STRING) 
     @Column(name = "metodo_pago")
     private MetodoPago metodoPago;
+    
+    @Column(name = "pago_reserva")
+    private double pagoReserva;
 
     // ─── ESTADO ───
     @Enumerated(EnumType.STRING)
@@ -60,10 +63,11 @@ public class Reserva implements Serializable {
     public Reserva() {}
 
     // Cliente registrado
-    public Reserva(Usuario usuario, Coche coche, MetodoPago metodoPago) {
+    public Reserva(Usuario usuario, Coche coche, MetodoPago metodoPago, double pagoReserva) {
         this.usuario = usuario;
         this.coche = coche;
         this.metodoPago = metodoPago;
+        this.pagoReserva = pagoReserva;
     }
 
 
@@ -116,6 +120,9 @@ public class Reserva implements Serializable {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    
+    public double getPagoReserva() { return pagoReserva; }
+    public void setPagoReserva(double pagoReserva) { this.pagoReserva = pagoReserva; }
 
     // NUEVOS MÉTODOS
     public Venta getVenta() { return venta; }
@@ -125,6 +132,17 @@ public class Reserva implements Serializable {
         if (venta != null && venta.getReserva() != this) {
             venta.setReserva(this); 
         }
+    }
+    
+    // para calcular el importe pendiente de pago (me interes para la mostrarlo en la ficha)
+    
+    public double getImportePendiente() {
+        if (this.coche == null) return 0;
+        
+        // podemos sacar así el precio del coche 
+        double precioTotal = this.coche.getPrecio(); 
+        
+        return precioTotal - this.pagoReserva;
     }
     
     
@@ -137,6 +155,7 @@ public class Reserva implements Serializable {
 				", fechaReserva=" + fechaReserva +
 				", fechaExpiracion=" + fechaExpiracion +
 				", metodoPago=" + metodoPago +
+				", pagoReserva=" + pagoReserva +
 				", tieneVenta=" + (venta != null) +
 				", estado=" + estado +
 				", transaccionId='" + transaccionId + '\'' +

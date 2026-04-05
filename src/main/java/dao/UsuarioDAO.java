@@ -214,6 +214,21 @@ public class UsuarioDAO {
             em.close();
         }
     }
+    
+    public boolean existeUsuarioOEmail(String username, String email) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            // Buscamos si hay alguien tiene ese email o susario ya registrado
+            String jpql = "SELECT COUNT(u) FROM Usuario u WHERE u.usuario = :user OR u.email = :email";
+            Long conteo = em.createQuery(jpql, Long.class)
+                            .setParameter("user", username)
+                            .setParameter("email", email)
+                            .getSingleResult();
+            return conteo > 0;
+        } finally {
+            em.close();
+        }
+    }
 
     // --- 🗑️ ELIMINAR ---
     public void eliminar(int id) {

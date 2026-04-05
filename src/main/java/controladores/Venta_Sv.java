@@ -119,20 +119,17 @@ public class Venta_Sv extends HttpServlet {
         }
     }
     
+    
     private void ejecutarDetalle(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = ServletUtil.parsearInt(request.getParameter("id"), "ID de venta");
-            
             VentaDTO v = ventaService.obtenerPorId(id);
 
             if (v == null) {
                 throw new Exception("La venta solicitada no existe.");
             }
 
-            ServletUtil.enviarRespuesta(response, Map.of(
-                "resultado", "OK",
-                "venta", v
-            ));
+            ServletUtil.enviarRespuesta(response, v); 
 
         } catch (Exception e) {
             ServletUtil.manejarError(response, e);

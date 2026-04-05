@@ -131,10 +131,10 @@ public class Reserva_Sv extends HttpServlet {
                 "mensaje", "Cliente registrado y reserva creada correctamente."
             ));
             
-        } catch (IllegalArgumentException e) {
-            ServletUtil.manejarError(response, new Exception("Método de pago no válido o datos incorrectos."));
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             ServletUtil.manejarError(response, e);
+        } catch (Exception e) {
+            ServletUtil.manejarError(response, new Exception("Error inesperado: " + e.getMessage()));
         }
     }
     
